@@ -1,18 +1,248 @@
 #!/bin/bash
 set -e
 
-JAR="xui-bot-1.0-SNAPSHOT.jar"
-DEPLOY_DIR="/opt/xui_bot"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_DIR="/opt/xui-bot"
+PROJECT_NAME="xui-bot"
 
-mvn clean package -q
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-mkdir -p "$DEPLOY_DIR"
-cp "target/$JAR" "$DEPLOY_DIR/"
-cp .env "$DEPLOY_DIR/" 2>/dev/null || true
-cp xui_bot.service /etc/systemd/system/
+info()  { echo -e "${BLUE}[INFO]${NC} $1"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
+err()   { echo -e "${RED}[ERROR]${NC} $1"; }
+ok()    { echo -e "${GREEN}[OK]${NC} $1"; }
 
-systemctl daemon-reload
-systemctl enable xui_bot
-systemctl restart xui_bot
-echo "Done. Status:"
-systemctl status xui_bot --no-pager
+check_root() {
+    if [ "$EUID" -ne 0 ]; then
+        err "Please run as root or with sudo"
+        exit 1
+    fi
+}
+
+install_docker() {
+    if command -v docker &> /dev/null && (docker compose version &> /dev/null || command -v docker-compose &> /dev/null); then
+        ok "Docker and Docker Compose already installed"
+        return
+    fi
+
+    info "Installing Docker and Docker Compose..."
+    apt-get update -qq
+    apt-get install -y -qq curl ca-certificates gnupg lsb-release software-properties-common
+
+    if ! command -v docker &> /dev/null; then
+        info "Installing Docker..."
+        curl -fsSL https://get.docker.com | sh
+        systemctl enable docker >/dev/null 2>&1
+        systemctl start docker
+    fi
+
+    if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
+        info "Installing Docker Compose plugin..."
+        apt-get install -y -qq docker-compose-plugin
+    fi
+
+    ok "Docker installed"
+}
+
+generate_env() {
+    local env_file="$INSTALL_DIR/.env"
+    if [ -f "$env_file" ]; then
+        warn ".env already exists, keeping existing file"
+        return
+    fi
+
+    info "Generating .env file..."
+    local db_pass
+    db_pass=$(openssl rand -base64 32 2>/dev/null || tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
+
+    cat > "$env_file" <<EOF
+# Telegram Bot
+BOT_TOKEN=
+BOT_USERNAME=
+ADMIN_IDS=
+
+# XUI Panel
+XUI_URL=
+XUI_USERNAME=
+XUI_PASSWORD=
+XUI_CERT_PATH=
+
+# Database: sqlite | postgres
+DB_TYPE=postgres
+DB_HOST=db
+DB_PORT=5432
+DB_NAME=xuibot
+DB_USER=xuibot
+DB_PASSWORD=${db_pass}
+EOF
+
+    ok ".env created at $env_file"
+    warn "IMPORTANT: Edit $env_file and fill in BOT_TOKEN, BOT_USERNAME, ADMIN_IDS, XUI_URL, XUI_USERNAME, XUI_PASSWORD before starting!"
+}
+
+copy_project() {
+    info "Copying project to $INSTALL_DIR..."
+    mkdir -p "$INSTALL_DIR"
+
+    # If running from git repo, copy all files. Otherwise clone.
+    if [ -d "$SCRIPT_DIR/.git" ] || [ -f "$SCRIPT_DIR/pom.xml" ]; then
+        cp -r "$SCRIPT_DIR"/* "$SCRIPT_DIR"/.* "$INSTALL_DIR"/ 2>/dev/null || true
+    else
+        git clone https://github.com/user/xui-java.git "$INSTALL_DIR" 2>/dev/null || true
+    fi
+
+    # Ensure necessary directories exist
+    mkdir -p "$INSTALL_DIR/data/postgres"
+    mkdir -p "$INSTALL_DIR/data/npm-data"
+    mkdir -p "$INSTALL_DIR/data/npm-letsencrypt"
+    mkdir -p "$INSTALL_DIR/logs"
+
+    ok "Project copied to $INSTALL_DIR"
+}
+
+do_install() {
+    check_root
+    install_docker
+    copy_project
+    generate_env
+
+    ok "Installation complete!"
+    echo ""
+    echo -e "${GREEN}Next steps:${NC}"
+    echo "  1. Edit ${YELLOW}$INSTALL_DIR/.env${NC} with your credentials"
+    echo "  2. Run ${YELLOW}$0 start${NC} to launch everything"
+    echo ""
+    echo -e "${GREEN}Nginx Proxy Manager${NC} will be available at:"
+    echo "  http://YOUR_SERVER_IP:81"
+    echo "  Default login: admin@example.com / changeme"
+}
+
+do_start() {
+    if [ ! -d "$INSTALL_DIR" ]; then
+        err "Not installed. Run: $0 install"
+        exit 1
+    fi
+    cd "$INSTALL_DIR"
+    info "Building and starting containers..."
+    docker compose up -d --build
+    ok "Started!"
+    info "Bot logs: $0 logs"
+    info "NPM admin panel: http://$(hostname -I | awk '{print $1}'):81"
+}
+
+do_debug() {
+    if [ ! -d "$INSTALL_DIR" ]; then
+        err "Not installed. Run: $0 install"
+        exit 1
+    fi
+    cd "$INSTALL_DIR"
+    info "Starting in DEBUG mode (foreground logs)..."
+    export LOG_LEVEL=DEBUG
+    docker compose up --build
+}
+
+do_stop() {
+    cd "$INSTALL_DIR"
+    info "Stopping containers..."
+    docker compose down
+    ok "Stopped"
+}
+
+do_restart() {
+    cd "$INSTALL_DIR"
+    info "Restarting containers..."
+    docker compose restart
+    ok "Restarted"
+}
+
+do_status() {
+    cd "$INSTALL_DIR"
+    docker compose ps
+}
+
+do_logs() {
+    cd "$INSTALL_DIR"
+    docker compose logs -f --tail=100 "${1:-bot}"
+}
+
+do_update() {
+    check_root
+    cd "$INSTALL_DIR"
+    info "Updating..."
+    docker compose down
+    if [ -d ".git" ]; then
+        git pull || warn "Git pull failed, continuing with local files"
+    fi
+    docker compose up -d --build
+    ok "Updated"
+}
+
+do_uninstall() {
+    check_root
+    if [ ! -d "$INSTALL_DIR" ]; then
+        err "Not installed."
+        exit 1
+    fi
+    read -r -p "Are you sure you want to uninstall? ALL data in $INSTALL_DIR will be deleted! [y/N] " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        cd "$INSTALL_DIR"
+        docker compose down -v 2>/dev/null || true
+        cd /
+        rm -rf "$INSTALL_DIR"
+        ok "Uninstalled"
+    else
+        info "Cancelled"
+    fi
+}
+
+case "${1:-}" in
+    install)
+        do_install
+        ;;
+    start)
+        do_start
+        ;;
+    debug)
+        do_debug
+        ;;
+    stop)
+        do_stop
+        ;;
+    restart)
+        do_restart
+        ;;
+    status)
+        do_status
+        ;;
+    debug)
+        do_debug
+        ;;
+    logs)
+        shift
+        do_logs "$@"
+        ;;
+    update)
+        do_update
+        ;;
+    uninstall)
+        do_uninstall
+        ;;
+    *)
+        echo "Usage: $0 {install|start|debug|stop|restart|status|logs [service]|update|uninstall}"
+        echo ""
+        echo "Commands:"
+        echo "  install    - Full installation (Docker, project files, .env)"
+        echo "  start      - Build and start all containers"
+        echo "  stop       - Stop all containers"
+        echo "  restart    - Restart all containers"
+        echo "  status     - Show container status"
+        echo "  logs       - Show logs (default: bot, use 'npm' or 'db' for others)"
+        echo "  update     - Pull latest code and rebuild"
+        echo "  uninstall  - Remove everything including data"
+        exit 1
+        ;;
+esac

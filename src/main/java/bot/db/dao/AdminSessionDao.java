@@ -41,7 +41,7 @@ public class AdminSessionDao {
         String sql = """
                 INSERT INTO admin_sessions (admin_tg_id, state, data)
                 VALUES (?, ?, ?)
-                ON CONFLICT(admin_tg_id) DO UPDATE SET
+                ON CONFLICT (admin_tg_id) DO UPDATE SET
                     state=excluded.state,
                     data=excluded.data,
                     updated_at=CURRENT_TIMESTAMP

@@ -13,42 +13,95 @@ Telegram-бот для управления VPN-ключами через пан
 
 - Java 17
 - Maven
-- SQLite + HikariCP
+- SQLite / PostgreSQL + HikariCP
 - Telegram Bots API (long-polling)
 - OkHttp + Jackson
+- Docker + Docker Compose
+- Nginx Proxy Manager
 
-## Настройка
+## Быстрая установка (рекомендуется)
 
-Создай файл `.env` в корне проекта:
-
-```env
-BOT_TOKEN=your_telegram_bot_token
-BOT_USERNAME=your_bot_username
-ADMIN_IDS=123456789,987654321
-XUI_URL=https://your-xui-panel.com:54321
-XUI_USERNAME=admin
-XUI_PASSWORD=admin
-XUI_CERT_PATH=/path/to/cert.pem
-DB_PATH=bot.db
-```
-
-> **XUI_CERT_PATH** — опционально. Если у панели self-signed сертификат, укажи путь к `.pem`/`.crt` файлу. Без него используется системное хранилище сертификатов (SSL включен).
-
-## Сборка
+Требуется чистый сервер на **Ubuntu/Debian** с root-доступом.
 
 ```bash
+git clone https://github.com/YOUR_REPO/xui-java.git
+cd xui-java
+sudo ./install.sh install
+```
+
+Скрипт автоматически установит Docker, Docker Compose, скопирует проект в `/opt/xui-bot` и создаст `.env`.
+
+**Обязательно отредактируйте `.env`:**
+
+```bash
+sudo nano /opt/xui-bot/.env
+```
+
+Заполните:
+- `BOT_TOKEN` — токен от @BotFather
+- `BOT_USERNAME` — имя бота
+- `ADMIN_IDS` — ID админов через запятую
+- `XUI_URL`, `XUI_USERNAME`, `XUI_PASSWORD` — данные от панели XUI
+
+Запуск:
+```bash
+sudo /opt/xui-bot/install.sh start
+```
+
+## Управление через скрипт
+
+```bash
+sudo /opt/xui-bot/install.sh start      # Запуск
+sudo /opt/xui-bot/install.sh stop       # Остановка
+sudo /opt/xui-bot/install.sh restart    # Перезапуск
+sudo /opt/xui-bot/install.sh status     # Статус контейнеров
+sudo /opt/xui-bot/install.sh logs       # Логи бота
+sudo /opt/xui-bot/install.sh logs npm   # Логи Nginx Proxy Manager
+sudo /opt/xui-bot/install.sh update     # Обновление из Git + пересборка
+sudo /opt/xui-bot/install.sh uninstall  # Полное удаление со всеми данными
+```
+
+## Nginx Proxy Manager
+
+После запуска откройте в браузере:
+```
+http://YOUR_SERVER_IP:81
+```
+- **Логин:** `admin@example.com`
+- **Пароль:** `changeme`
+
+Через NPM можно выпустить SSL-сертификаты и направить домен на XUI-панель или другие сервисы.
+
+## Docker Compose (вручную)
+
+Если хотите управлять вручную без скрипта:
+
+```bash
+cd /opt/xui-bot
+docker compose up -d --build
+docker compose logs -f bot
+```
+
+## Структура сервисов
+
+| Сервис | Описание | Порты |
+|--------|----------|-------|
+| `bot` | Сам Telegram-бот | — |
+| `db` | PostgreSQL (данные бота) | — (внутри сети) |
+| `npm` | Nginx Proxy Manager | 80, 443, 81 |
+
+Персистентные данные хранятся в `/opt/xui-bot/data/`.
+
+## Локальная разработка (без Docker)
+
+```bash
+# SQLite по умолчанию
+cp .env.example .env
 mvn clean package
-```
-
-Fat-JAR собирается в `target/xui-bot-1.0-SNAPSHOT.jar`.
-
-## Запуск
-
-```bash
 java -jar target/xui-bot-1.0-SNAPSHOT.jar
 ```
 
-Или через systemd (см. `xui_bot.service` и `install.sh`).
+Для работы с SQLite оставьте `DB_TYPE=sqlite` (или не указывайте переменную).
 
 ## Тесты
 
@@ -56,15 +109,21 @@ java -jar target/xui-bot-1.0-SNAPSHOT.jar
 mvn test
 ```
 
-## Структура
+## Переменные окружения
 
-```
-src/main/java/bot/
-├── config/         # Настройки из .env
-├── db/             # База данных, модели, DAO
-├── handler/        # Обработчики команд
-├── keyboard/       # Клавиатуры
-├── middleware/     # Регистрация пользователей
-├── service/        # Бизнес-логика и HTTP-клиент XUI
-└── util/           # Константы сообщений
-```
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `BOT_TOKEN` | Токен Telegram бота | — |
+| `BOT_USERNAME` | Юзернейм бота | — |
+| `ADMIN_IDS` | ID админов через запятую | — |
+| `XUI_URL` | URL панели XUI | — |
+| `XUI_USERNAME` | Логин от панели | — |
+| `XUI_PASSWORD` | Пароль от панели | — |
+| `XUI_CERT_PATH` | Путь к self-signed серту (опц.) | — |
+| `DB_TYPE` | Тип БД: `sqlite` или `postgres` | `sqlite` |
+| `DB_PATH` | Путь к файлу SQLite (для sqlite) | `bot.db` |
+| `DB_HOST` | Хост PostgreSQL | — |
+| `DB_PORT` | Порт PostgreSQL | `5432` |
+| `DB_NAME` | Имя базы PostgreSQL | — |
+| `DB_USER` | Пользователь PostgreSQL | — |
+| `DB_PASSWORD` | Пароль PostgreSQL | — |

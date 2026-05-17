@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: xui-bot-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - xui-bot-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build: .
+    container_name: xui-bot-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - xui-bot-net
+
+  npm:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: xui-bot-npm
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    volumes:
+      - ./data/npm-data:/data
+      - ./data/npm-letsencrypt:/etc/letsencrypt
+    networks:
+      - xui-bot-net
+
+networks:
+  xui-bot-net:
+    driver: bridge

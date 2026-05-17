@@ -15,7 +15,7 @@ public class RegisterMiddleware {
              PreparedStatement ps = c.prepareStatement("""
                 INSERT INTO users (tg_id, username, full_name)
                 VALUES (?, ?, ?)
-                ON CONFLICT(tg_id) DO UPDATE SET
+                ON CONFLICT (tg_id) DO UPDATE SET
                     username=excluded.username,
                     full_name=excluded.full_name
                 """)) {
