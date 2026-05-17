@@ -11,8 +11,8 @@ public class RegisterMiddleware {
 
     public static void register(User tgUser) {
         if (tgUser == null || Boolean.TRUE.equals(tgUser.getIsBot())) return;
-        Connection c = Database.get();
-        try (PreparedStatement ps = c.prepareStatement("""
+        try (Connection c = Database.get();
+             PreparedStatement ps = c.prepareStatement("""
                 INSERT INTO users (tg_id, username, full_name)
                 VALUES (?, ?, ?)
                 ON CONFLICT(tg_id) DO UPDATE SET

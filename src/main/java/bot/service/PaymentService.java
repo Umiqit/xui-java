@@ -1,49 +1,48 @@
 package bot.service;
 
 import bot.db.Database;
+import bot.db.dao.PaymentDao;
+import bot.db.model.Payment;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class PaymentService {
 
     public static long createPayment(long userId, double amount, String currency, String payload) {
-        Connection c = Database.get();
-        try (PreparedStatement ps = c.prepareStatement(
-                "INSERT INTO payments (user_id, amount, currency, payload, status) VALUES (?,?,?,?,'pending')",
-                Statement.RETURN_GENERATED_KEYS)) {
-            ps.setLong(1, userId);
-            ps.setDouble(2, amount);
-            ps.setString(3, currency);
-            ps.setString(4, payload);
-            ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                return keys.next() ? keys.getLong(1) : -1;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("createPayment failed", e);
-        }
+        Payment p = new Payment();
+        p.userId = userId;
+        p.amount = amount;
+        p.currency = currency;
+        p.payload = payload;
+        return PaymentDao.create(p);
     }
 
     public static void confirmPayment(long paymentId, long userId, double amount) {
-        Connection c = Database.get();
-        try {
-            try (PreparedStatement ps = c.prepareStatement(
-                    "UPDATE payments SET status='completed' WHERE id=?")) {
-                ps.setLong(1, paymentId);
-                ps.executeUpdate();
-            }
-            try (PreparedStatement ps = c.prepareStatement(
-                    "UPDATE users SET balance = balance + ? WHERE id=?")) {
-                ps.setDouble(1, amount);
-                ps.setLong(2, userId);
-                ps.executeUpdate();
+        try (Connection c = Database.get()) {
+            c.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = c.prepareStatement(
+                        "UPDATE payments SET status='completed' WHERE id=?")) {
+                    ps.setLong(1, paymentId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                        "UPDATE users SET balance = balance + ? WHERE id=?")) {
+                    ps.setDouble(1, amount);
+                    ps.setLong(2, userId);
+                    ps.executeUpdate();
+                }
+                c.commit();
+            } catch (Exception e) {
+                try { c.rollback(); } catch (SQLException ignored) {}
+                throw new RuntimeException("confirmPayment failed", e);
+            } finally {
+                try { c.setAutoCommit(true); } catch (SQLException ignored) {}
             }
         } catch (SQLException e) {
-            throw new RuntimeException("confirmPayment failed", e);
+            throw new RuntimeException("confirmPayment connection failed", e);
         }
     }
 }

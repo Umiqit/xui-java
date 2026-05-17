@@ -1,8 +1,15 @@
 package bot.handler;
 
-import bot.db.Database;
+import bot.db.dao.AdminSessionDao;
+import bot.db.dao.KeyDao;
+import bot.db.dao.UserDao;
+import bot.db.model.AdminSession;
+import bot.db.model.Key;
 import bot.keyboard.Menus;
+import bot.service.AdminService;
 import bot.service.XuiClient;
+import bot.service.XuiApiException;
+import bot.util.Messages;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -12,18 +19,12 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class AdminHandler {
 
-    // FSM state per admin chat
     public enum State {
         IDLE,
         WAITING_TG_ID,
@@ -34,105 +35,93 @@ public class AdminHandler {
         WAITING_TRAFFIC_GB
     }
 
-    public static final Map<Long, State> adminState = new ConcurrentHashMap<>();
-    public static final Map<Long, Map<String, Object>> adminData = new ConcurrentHashMap<>();
-
     public static void handlePanel(AbsSender bot, Message msg) throws TelegramApiException {
         bot.execute(SendMessage.builder()
                 .chatId(msg.getChatId())
-                .text("⚙️ <b>Админка</b>\n\nДоступные команды:\n" +
-                        "/add_key — добавить ключ пользователю\n" +
-                        "/xui_inbounds — список inbound'ов с панели\n" +
-                        "/users — список пользователей")
+                .text(Messages.ADMIN_PANEL)
                 .parseMode("HTML")
                 .build());
     }
 
     public static void handleXuiInbounds(AbsSender bot, Message msg) throws TelegramApiException {
-        XuiClient.get().login();
-        List<JsonNode> inbounds = XuiClient.get().getInbounds();
-        if (inbounds.isEmpty()) {
+        try {
+            XuiClient.get().login();
+            List<JsonNode> inbounds = XuiClient.get().getInbounds();
+            if (inbounds.isEmpty()) {
+                bot.execute(SendMessage.builder()
+                        .chatId(msg.getChatId()).text(Messages.XUI_NO_INBOUNDS).build());
+                return;
+            }
             bot.execute(SendMessage.builder()
-                    .chatId(msg.getChatId()).text("Панель недоступна или нет inbound'ов.").build());
-            return;
+                    .chatId(msg.getChatId())
+                    .text("Выбери inbound:")
+                    .replyMarkup(Menus.adminInboundsKeyboard(inbounds))
+                    .build());
+        } catch (XuiApiException e) {
+            bot.execute(SendMessage.builder()
+                    .chatId(msg.getChatId()).text(Messages.SERVICE_UNAVAILABLE).build());
         }
-        bot.execute(SendMessage.builder()
-                .chatId(msg.getChatId())
-                .text("Выбери inbound:")
-                .replyMarkup(Menus.adminInboundsKeyboard(inbounds))
-                .build());
     }
 
     public static void handleInboundDetail(AbsSender bot, CallbackQuery call, int inboundId) throws TelegramApiException {
-        XuiClient.get().login();
-        List<JsonNode> inbounds = XuiClient.get().getInbounds();
-        JsonNode inbound = null;
-        for (JsonNode ib : inbounds) {
-            if (ib.path("id").asInt() == inboundId) { inbound = ib; break; }
-        }
-        if (inbound == null) {
+        try {
+            XuiClient.get().login();
+            List<JsonNode> inbounds = XuiClient.get().getInbounds();
+            JsonNode inbound = null;
+            for (JsonNode ib : inbounds) {
+                if (ib.path("id").asInt() == inboundId) { inbound = ib; break; }
+            }
+            if (inbound == null) {
+                bot.execute(AnswerCallbackQuery.builder()
+                        .callbackQueryId(call.getId()).text(Messages.XUI_INBOUND_NOT_FOUND).showAlert(true).build());
+                return;
+            }
+            String text = AdminService.formatInboundDetail(inbound);
+            bot.execute(EditMessageText.builder()
+                    .chatId(call.getMessage().getChatId().toString())
+                    .messageId(call.getMessage().getMessageId())
+                    .text(text).parseMode("HTML").build());
+        } catch (XuiApiException e) {
             bot.execute(AnswerCallbackQuery.builder()
-                    .callbackQueryId(call.getId()).text("Inbound не найден").showAlert(true).build());
-            return;
+                    .callbackQueryId(call.getId()).text(Messages.SERVICE_UNAVAILABLE).showAlert(true).build());
         }
-        List<JsonNode> clients = new java.util.ArrayList<>();
-        inbound.path("clientStats").forEach(clients::add);
-        StringBuilder sb = new StringBuilder("📡 <b>" +
-                inbound.path("remark").asText(String.valueOf(inboundId)) + "</b> — " +
-                clients.size() + " клиентов\n\n");
-        int limit = Math.min(30, clients.size());
-        for (int i = 0; i < limit; i++) {
-            JsonNode cl = clients.get(i);
-            double used = Math.round((cl.path("up").asLong(0) + cl.path("down").asLong(0))
-                    / (1024.0 * 1024 * 1024) * 100.0) / 100.0;
-            double total = Math.round(cl.path("total").asLong(0) / (1024.0 * 1024 * 1024) * 100.0) / 100.0;
-            String en = cl.path("enable").asBoolean(false) ? "🟢" : "🔴";
-            String totalStr = total == 0 ? "∞" : String.valueOf(total);
-            sb.append(en).append(" <code>").append(cl.path("email").asText())
-              .append("</code> — ").append(used).append("/").append(totalStr).append(" GB\n");
-        }
-        bot.execute(EditMessageText.builder()
-                .chatId(call.getMessage().getChatId().toString())
-                .messageId(call.getMessage().getMessageId())
-                .text(sb.toString()).parseMode("HTML").build());
     }
 
     public static void handleAddKeyStart(AbsSender bot, Message msg) throws TelegramApiException {
         long chatId = msg.getChatId();
-        adminState.put(chatId, State.WAITING_TG_ID);
-        adminData.put(chatId, new ConcurrentHashMap<>());
-        bot.execute(SendMessage.builder().chatId(chatId).text("Telegram ID пользователя:").build());
+        AdminSessionDao.save(chatId, State.WAITING_TG_ID.name(), new HashMap<>());
+        bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_ENTER_TG_ID).build());
+    }
+
+    public static void cancel(AbsSender bot, Message msg) throws TelegramApiException {
+        long chatId = msg.getChatId();
+        AdminSessionDao.delete(chatId);
+        bot.execute(SendMessage.builder().chatId(chatId).text(Messages.CANCEL_OK).build());
     }
 
     public static void handleAddKeyListUsers(AbsSender bot, Message msg) throws TelegramApiException {
-        Connection c = Database.get();
-        try (PreparedStatement ps = c.prepareStatement(
-                "SELECT tg_id, username, full_name, balance, created_at FROM users ORDER BY created_at DESC LIMIT 30");
-             ResultSet rs = ps.executeQuery()) {
-            StringBuilder sb = new StringBuilder("<b>Пользователи</b>:\n\n");
-            int count = 0;
-            while (rs.next()) {
-                count++;
-                String name = rs.getString("full_name");
-                if (name == null) name = rs.getString("username");
-                if (name == null) name = String.valueOf(rs.getLong("tg_id"));
-                sb.append("• <code>").append(rs.getLong("tg_id")).append("</code> ")
-                  .append(name).append(" — ").append((int) rs.getDouble("balance")).append("⭐\n");
-            }
-            if (count == 0) { bot.execute(SendMessage.builder().chatId(msg.getChatId()).text("Пользователей нет.").build()); return; }
-            bot.execute(SendMessage.builder().chatId(msg.getChatId()).text(sb.toString()).parseMode("HTML").build());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        String text = AdminService.formatUsersList();
+        if (text == null) {
+            bot.execute(SendMessage.builder().chatId(msg.getChatId()).text(Messages.NO_USERS).build());
+            return;
         }
+        bot.execute(SendMessage.builder().chatId(msg.getChatId()).text(text).parseMode("HTML").build());
     }
 
-    // FSM step handler — routes incoming text based on current state
     public static boolean handleFsmStep(AbsSender bot, Message msg) throws TelegramApiException {
         long chatId = msg.getChatId();
-        State state = adminState.getOrDefault(chatId, State.IDLE);
+        AdminSession session = AdminSessionDao.findByAdminTgId(chatId);
+        if (session == null) return false;
+
+        State state;
+        try { state = State.valueOf(session.state); }
+        catch (IllegalArgumentException e) {
+            AdminSessionDao.delete(chatId);
+            return false;
+        }
         if (state == State.IDLE) return false;
 
-        Map<String, Object> data = adminData.computeIfAbsent(chatId, k -> new ConcurrentHashMap<>());
+        Map<String, Object> data = session.data != null ? session.data : new HashMap<>();
         String text = msg.getText() != null ? msg.getText().trim() : "";
 
         switch (state) {
@@ -140,76 +129,76 @@ public class AdminHandler {
                 long tgId;
                 try { tgId = Long.parseLong(text); }
                 catch (NumberFormatException e) {
-                    bot.execute(SendMessage.builder().chatId(chatId).text("Нужен числовой ID.").build());
+                    bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_NEED_NUMBER).build());
                     return true;
                 }
-                Connection c = Database.get();
-                try (PreparedStatement ps = c.prepareStatement("SELECT id FROM users WHERE tg_id=?")) {
-                    ps.setLong(1, tgId);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (!rs.next()) {
-                            bot.execute(SendMessage.builder().chatId(chatId).text("Пользователь не найден в БД.").build());
-                            adminState.put(chatId, State.IDLE);
-                            return true;
-                        }
-                        data.put("tg_id", tgId);
-                        data.put("user_db_id", rs.getLong("id"));
+                Long dbId = UserDao.getIdByTgId(tgId);
+                if (dbId == null) {
+                    bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_USER_NOT_FOUND).build());
+                    AdminSessionDao.delete(chatId);
+                    return true;
+                }
+                data.put("tg_id", tgId);
+                data.put("user_db_id", dbId);
+
+                try {
+                    XuiClient.get().login();
+                    List<JsonNode> inbounds = XuiClient.get().getInbounds();
+                    if (inbounds.isEmpty()) {
+                        bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_NO_INBOUNDS).build());
+                        AdminSessionDao.delete(chatId);
+                        return true;
                     }
-                } catch (SQLException e) { throw new RuntimeException(e); }
-                XuiClient.get().login();
-                List<JsonNode> inbounds = XuiClient.get().getInbounds();
-                if (inbounds.isEmpty()) {
-                    bot.execute(SendMessage.builder().chatId(chatId).text("Не удалось получить inbound'ы с панели.").build());
-                    adminState.put(chatId, State.IDLE);
-                    return true;
+                    StringBuilder sb = new StringBuilder("Inbound'ы:\n");
+                    for (JsonNode ib : inbounds)
+                        sb.append("  ").append(ib.path("id").asInt()).append(" — ").append(ib.path("remark").asText("")).append("\n");
+                    sb.append(Messages.ADD_KEY_ENTER_INBOUND);
+                    bot.execute(SendMessage.builder().chatId(chatId).text(sb.toString()).build());
+                    AdminSessionDao.save(chatId, State.WAITING_INBOUND.name(), data);
+                } catch (XuiApiException e) {
+                    bot.execute(SendMessage.builder().chatId(chatId).text(Messages.SERVICE_UNAVAILABLE).build());
+                    AdminSessionDao.delete(chatId);
                 }
-                data.put("inbounds", inbounds);
-                StringBuilder sb = new StringBuilder("Inbound'ы:\n");
-                for (JsonNode ib : inbounds)
-                    sb.append("  ").append(ib.path("id").asInt()).append(" — ").append(ib.path("remark").asText("")).append("\n");
-                sb.append("\nВведи ID inbound'а:");
-                bot.execute(SendMessage.builder().chatId(chatId).text(sb.toString()).build());
-                adminState.put(chatId, State.WAITING_INBOUND);
             }
             case WAITING_INBOUND -> {
                 try { data.put("inbound_id", Integer.parseInt(text)); }
                 catch (NumberFormatException e) {
-                    bot.execute(SendMessage.builder().chatId(chatId).text("Числовой ID.").build());
+                    bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_NEED_INT).build());
                     return true;
                 }
-                bot.execute(SendMessage.builder().chatId(chatId).text("Email для клиента (уникальный на панели):").build());
-                adminState.put(chatId, State.WAITING_EMAIL);
+                bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_ENTER_EMAIL).build());
+                AdminSessionDao.save(chatId, State.WAITING_EMAIL.name(), data);
             }
             case WAITING_EMAIL -> {
                 data.put("email", text);
-                bot.execute(SendMessage.builder().chatId(chatId).text("Remark (описание, можно пустым):").build());
-                adminState.put(chatId, State.WAITING_REMARK);
+                bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_ENTER_REMARK).build());
+                AdminSessionDao.save(chatId, State.WAITING_REMARK.name(), data);
             }
             case WAITING_REMARK -> {
                 data.put("remark", text);
-                bot.execute(SendMessage.builder().chatId(chatId).text("Срок действия в днях (0 — бессрочно):").build());
-                adminState.put(chatId, State.WAITING_EXPIRY_DAYS);
+                bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_ENTER_EXPIRY).build());
+                AdminSessionDao.save(chatId, State.WAITING_EXPIRY_DAYS.name(), data);
             }
             case WAITING_EXPIRY_DAYS -> {
                 int days;
                 try { days = Integer.parseInt(text); }
                 catch (NumberFormatException e) {
-                    bot.execute(SendMessage.builder().chatId(chatId).text("Число.").build());
+                    bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_NEED_INT).build());
                     return true;
                 }
                 long expiryTs = days > 0 ? (System.currentTimeMillis() + (long) days * 86400 * 1000) : 0;
                 data.put("expiry_ts", expiryTs);
-                bot.execute(SendMessage.builder().chatId(chatId).text("Лимит трафика в GB (0 — безлимит):").build());
-                adminState.put(chatId, State.WAITING_TRAFFIC_GB);
+                bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_ENTER_TRAFFIC).build());
+                AdminSessionDao.save(chatId, State.WAITING_TRAFFIC_GB.name(), data);
             }
             case WAITING_TRAFFIC_GB -> {
                 int trafficGb;
                 try { trafficGb = Integer.parseInt(text); }
                 catch (NumberFormatException e) {
-                    bot.execute(SendMessage.builder().chatId(chatId).text("Число.").build());
+                    bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_NEED_INT).build());
                     return true;
                 }
-                adminState.put(chatId, State.IDLE);
+                AdminSessionDao.delete(chatId);
 
                 XuiClient.AddResult result = XuiClient.get().addClient(
                         (int) data.get("inbound_id"),
@@ -219,30 +208,24 @@ public class AdminHandler {
                         trafficGb
                 );
                 if (!result.success()) {
-                    bot.execute(SendMessage.builder().chatId(chatId).text("Ошибка при создании клиента на панели.").build());
+                    bot.execute(SendMessage.builder().chatId(chatId).text(Messages.ADD_KEY_ERROR).build());
                     return true;
                 }
                 long trafficBytes = trafficGb > 0 ? (long) trafficGb * 1024 * 1024 * 1024 : 0;
-                Connection c = Database.get();
-                try (PreparedStatement ps = c.prepareStatement("""
-                        INSERT INTO keys (user_id, inbound_id, xui_client_id, xui_email, remark, expiry_ts, traffic_total)
-                        VALUES (?,?,?,?,?,?,?)
-                        """)) {
-                    ps.setLong(1, (long) data.get("user_db_id"));
-                    ps.setInt(2, (int) data.get("inbound_id"));
-                    ps.setString(3, result.clientId());
-                    ps.setString(4, (String) data.get("email"));
-                    ps.setString(5, (String) data.get("remark"));
-                    ps.setLong(6, (long) data.get("expiry_ts"));
-                    ps.setLong(7, trafficBytes);
-                    ps.executeUpdate();
-                } catch (SQLException e) { throw new RuntimeException(e); }
+
+                Key key = new Key();
+                key.userId = (long) data.get("user_db_id");
+                key.inboundId = (int) data.get("inbound_id");
+                key.xuiClientId = result.clientId();
+                key.xuiEmail = (String) data.get("email");
+                key.remark = (String) data.get("remark");
+                key.expiryTs = (long) data.get("expiry_ts");
+                key.trafficTotal = trafficBytes;
+                KeyDao.insert(key);
 
                 bot.execute(SendMessage.builder()
                         .chatId(chatId)
-                        .text("✅ Ключ создан\n" +
-                                "Email: <code>" + data.get("email") + "</code>\n" +
-                                "UUID: <code>" + result.clientId() + "</code>")
+                        .text(String.format(Messages.ADD_KEY_SUCCESS, data.get("email"), result.clientId()))
                         .parseMode("HTML").build());
             }
         }

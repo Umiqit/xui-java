@@ -3,6 +3,7 @@ package bot;
 import bot.config.Settings;
 import bot.db.Database;
 import bot.handler.UpdateRouter;
+import bot.service.XuiApiException;
 import bot.service.XuiClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +33,12 @@ public class Main extends TelegramLongPollingBot {
 
     public static void main(String[] args) throws TelegramApiException {
         Database.init();
-        boolean loginOk = XuiClient.get().login();
-        log.info("XUI login: {}", loginOk ? "OK" : "FAILED");
+        try {
+            XuiClient.get().login();
+            log.info("XUI login: OK");
+        } catch (XuiApiException e) {
+            log.error("XUI login failed: {}", e.getMessage());
+        }
 
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
         api.registerBot(new Main());

@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: bot.db.dao.UserDaoTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.450 s -- in bot.db.dao.UserDaoTest

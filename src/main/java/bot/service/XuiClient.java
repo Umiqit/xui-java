@@ -10,9 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,31 +39,37 @@ public class XuiClient {
     public static XuiClient get() { return INSTANCE; }
 
     private OkHttpClient buildClient() {
-        try {
-            TrustManager[] tm = {new X509TrustManager() {
-                public void checkClientTrusted(X509Certificate[] c, String a) {}
-                public void checkServerTrusted(X509Certificate[] c, String a) {}
-                public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
-            }};
-            SSLContext sc = SSLContext.getInstance("TLS");
-            sc.init(null, tm, new java.security.SecureRandom());
-            return new OkHttpClient.Builder()
-                    .sslSocketFactory(sc.getSocketFactory(), (X509TrustManager) tm[0])
-                    .hostnameVerifier((h, s) -> true)
-                    .connectTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(15, TimeUnit.SECONDS)
-                    .cookieJar(new CookieJar() {
-                        private final List<Cookie> cookies = new ArrayList<>();
-                        public void saveFromResponse(HttpUrl url, List<Cookie> c) { cookies.addAll(c); }
-                        public List<Cookie> loadForRequest(HttpUrl url) { return cookies; }
-                    })
-                    .build();
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            throw new RuntimeException(e);
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(15, TimeUnit.SECONDS)
+                .cookieJar(new CookieJar() {
+                    private final List<Cookie> cookies = new ArrayList<>();
+                    public void saveFromResponse(HttpUrl url, List<Cookie> c) { cookies.addAll(c); }
+                    public List<Cookie> loadForRequest(HttpUrl url) { return cookies; }
+                });
+
+        String certPath = Settings.get().XUI_CERT_PATH;
+        if (certPath != null && !certPath.isBlank()) {
+            try {
+                KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+                ks.load(null, null);
+                try (FileInputStream is = new FileInputStream(certPath)) {
+                    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                    ks.setCertificateEntry("xui", cf.generateCertificate(is));
+                }
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                tmf.init(ks);
+                SSLContext sc = SSLContext.getInstance("TLS");
+                sc.init(null, tmf.getTrustManagers(), null);
+                builder.sslSocketFactory(sc.getSocketFactory(), (X509TrustManager) tmf.getTrustManagers()[0]);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to load custom XUI certificate from " + certPath, e);
+            }
         }
+        return builder.build();
     }
 
-    public boolean login() {
+    public void login() {
         String body = "username=" + Settings.get().XUI_USERNAME +
                       "&password=" + Settings.get().XUI_PASSWORD;
         Request req = new Request.Builder()
@@ -71,52 +78,48 @@ public class XuiClient {
                 .build();
         try (Response resp = http.newCall(req).execute()) {
             JsonNode node = mapper.readTree(resp.body().string());
-            return node.path("success").asBoolean(false);
+            if (!node.path("success").asBoolean(false)) {
+                throw new XuiApiException("XUI login rejected");
+            }
         } catch (IOException e) {
-            log.error("XUI login failed", e);
-            return false;
+            throw new XuiApiException("XUI login failed", e);
         }
     }
 
-    private JsonNode doGet(String path) throws IOException {
-        Request req = new Request.Builder().url(baseUrl + path).get().build();
+    private JsonNode doRequest(Request req) throws IOException {
         try (Response resp = http.newCall(req).execute()) {
-            if (resp.code() == 401) { login(); return doGet(path); }
-            return mapper.readTree(resp.body().string());
-        }
-    }
-
-    private JsonNode doPost(String path, String jsonBody) throws IOException {
-        RequestBody rb = (jsonBody != null)
-                ? RequestBody.create(jsonBody, JSON)
-                : RequestBody.create("", JSON);
-        Request req = new Request.Builder().url(baseUrl + path).post(rb).build();
-        try (Response resp = http.newCall(req).execute()) {
-            if (resp.code() == 401) { login(); return doPost(path, jsonBody); }
+            if (resp.code() == 401) {
+                login();
+                try (Response resp2 = http.newCall(req).execute()) {
+                    return mapper.readTree(resp2.body().string());
+                }
+            }
             return mapper.readTree(resp.body().string());
         }
     }
 
     public List<JsonNode> getInbounds() {
         try {
-            JsonNode data = doGet("/xui/inbound/list");
+            Request req = new Request.Builder().url(baseUrl + "/xui/inbound/list").get().build();
+            JsonNode data = doRequest(req);
             ArrayNode arr = (ArrayNode) data.path("obj");
             List<JsonNode> list = new ArrayList<>();
             arr.forEach(list::add);
             return list;
         } catch (IOException e) {
-            log.error("getInbounds failed", e);
-            return List.of();
+            throw new XuiApiException("Failed to fetch inbounds", e);
         }
     }
 
     public JsonNode getClientStats(String email) {
         try {
-            JsonNode data = doGet("/xui/inbound/getClientTraffics/" + email);
+            Request req = new Request.Builder()
+                    .url(baseUrl + "/xui/inbound/getClientTraffics/" + email)
+                    .get().build();
+            JsonNode data = doRequest(req);
             return data.path("obj").isNull() ? null : data.path("obj");
         } catch (IOException e) {
-            log.error("getClientStats failed", e);
-            return null;
+            throw new XuiApiException("Failed to fetch client stats for " + email, e);
         }
     }
 
@@ -147,32 +150,41 @@ public class XuiClient {
         payload.set("settings", settings);
 
         try {
-            JsonNode resp = doPost("/xui/inbound/addClient", payload.toString());
+            Request req = new Request.Builder()
+                    .url(baseUrl + "/xui/inbound/addClient")
+                    .post(RequestBody.create(payload.toString(), JSON))
+                    .build();
+            JsonNode resp = doRequest(req);
             boolean ok = resp.path("success").asBoolean(false);
             return new AddResult(ok, clientId);
         } catch (IOException e) {
-            log.error("addClient failed", e);
-            return new AddResult(false, clientId);
+            throw new XuiApiException("Failed to add client", e);
         }
     }
 
     public boolean deleteClient(int inboundId, String clientId) {
         try {
-            JsonNode resp = doPost("/xui/inbound/" + inboundId + "/delClient/" + clientId, null);
+            Request req = new Request.Builder()
+                    .url(baseUrl + "/xui/inbound/" + inboundId + "/delClient/" + clientId)
+                    .post(RequestBody.create("", JSON))
+                    .build();
+            JsonNode resp = doRequest(req);
             return resp.path("success").asBoolean(false);
         } catch (IOException e) {
-            log.error("deleteClient failed", e);
-            return false;
+            throw new XuiApiException("Failed to delete client", e);
         }
     }
 
     public boolean resetClientTraffic(int inboundId, String email) {
         try {
-            JsonNode resp = doPost("/xui/inbound/" + inboundId + "/resetClientTraffic/" + email, null);
+            Request req = new Request.Builder()
+                    .url(baseUrl + "/xui/inbound/" + inboundId + "/resetClientTraffic/" + email)
+                    .post(RequestBody.create("", JSON))
+                    .build();
+            JsonNode resp = doRequest(req);
             return resp.path("success").asBoolean(false);
         } catch (IOException e) {
-            log.error("resetClientTraffic failed", e);
-            return false;
+            throw new XuiApiException("Failed to reset client traffic", e);
         }
     }
 }

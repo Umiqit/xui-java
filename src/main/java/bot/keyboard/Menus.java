@@ -1,5 +1,6 @@
 package bot.keyboard;
 
+import bot.db.model.Key;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -38,18 +39,17 @@ public class Menus {
         return kb;
     }
 
-    // keys: List of maps with keys: id, remark, xui_email, is_expired
-    public static InlineKeyboardMarkup keysKeyboard(List<Map<String, Object>> keys) {
+    public static InlineKeyboardMarkup keysKeyboard(List<Key> keys) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        for (Map<String, Object> key : keys) {
-            boolean expired = (boolean) key.get("is_expired");
+        for (Key key : keys) {
+            boolean expired = key.isExpired();
             String label = expired ? "🔴 " : "🟢 ";
-            String name = (String) key.get("remark");
-            if (name == null || name.isBlank()) name = (String) key.get("xui_email");
+            String name = key.remark;
+            if (name == null || name.isBlank()) name = key.xuiEmail;
             label += name;
             InlineKeyboardButton btn = InlineKeyboardButton.builder()
                     .text(label)
-                    .callbackData("key_detail:" + key.get("id"))
+                    .callbackData("key_detail:" + key.id)
                     .build();
             rows.add(List.of(btn));
         }
@@ -75,10 +75,10 @@ public class Menus {
     public static InlineKeyboardMarkup paymentKeyboard(int[] amounts) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         List<InlineKeyboardButton> row = new ArrayList<>();
-        for (int i = 0; i < amounts.length; i++) {
+        for (int amount : amounts) {
             row.add(InlineKeyboardButton.builder()
-                    .text("⭐ " + amounts[i])
-                    .callbackData("pay_stars:" + amounts[i]).build());
+                    .text("⭐ " + amount)
+                    .callbackData("pay_stars:" + amount).build());
             if (row.size() == 3) { rows.add(row); row = new ArrayList<>(); }
         }
         if (!row.isEmpty()) rows.add(row);

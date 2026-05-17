@@ -3,6 +3,8 @@ package bot.handler;
 import bot.config.Settings;
 import bot.keyboard.Menus;
 import bot.middleware.RegisterMiddleware;
+import bot.service.XuiApiException;
+import bot.util.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -40,18 +42,21 @@ public class UpdateRouter {
                     case "👤 Профиль"    -> ProfileHandler.handle(bot, msg);
                     case "🔑 Мои ключи"  -> KeysHandler.handleList(bot, msg);
                     case "💳 Пополнить"  -> PaymentHandler.handleTopup(bot, msg);
-                    case "📊 Статистика" -> ProfileHandler.handle(bot, msg); // same view
+                    case "📊 Статистика" -> ProfileHandler.handle(bot, msg);
                     case "⚙️ Админка"    -> { if (isAdmin) AdminHandler.handlePanel(bot, msg); }
                     case "/xui_inbounds" -> { if (isAdmin) AdminHandler.handleXuiInbounds(bot, msg); }
                     case "/add_key"      -> { if (isAdmin) AdminHandler.handleAddKeyStart(bot, msg); }
                     case "/users"        -> { if (isAdmin) AdminHandler.handleAddKeyListUsers(bot, msg); }
+                    case "/cancel"       -> { if (isAdmin) AdminHandler.cancel(bot, msg); }
                     default -> {
-                        SendMessage sm = SendMessage.builder()
-                                .chatId(msg.getChatId())
-                                .text("Не понял команду. Используй кнопки меню.")
-                                .replyMarkup(isAdmin ? Menus.adminMenu() : Menus.mainMenu())
-                                .build();
-                        bot.execute(sm);
+                        if (text.startsWith("/")) {
+                            SendMessage sm = SendMessage.builder()
+                                    .chatId(msg.getChatId())
+                                    .text(Messages.UNKNOWN_COMMAND)
+                                    .replyMarkup(isAdmin ? Menus.adminMenu() : Menus.mainMenu())
+                                    .build();
+                            bot.execute(sm);
+                        }
                     }
                 }
 
@@ -77,6 +82,24 @@ public class UpdateRouter {
 
         } catch (TelegramApiException e) {
             log.error("Telegram API error", e);
+        } catch (XuiApiException e) {
+            log.error("XUI API error", e);
+            try {
+                if (update.hasMessage()) {
+                    bot.execute(SendMessage.builder()
+                            .chatId(update.getMessage().getChatId())
+                            .text(Messages.SERVICE_UNAVAILABLE)
+                            .build());
+                } else if (update.hasCallbackQuery()) {
+                    bot.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
+                            .callbackQueryId(update.getCallbackQuery().getId())
+                            .text(Messages.SERVICE_UNAVAILABLE)
+                            .showAlert(true)
+                            .build());
+                }
+            } catch (TelegramApiException ex) {
+                log.error("Failed to send error message", ex);
+            }
         } catch (Exception e) {
             log.error("Unhandled error in router", e);
         }
