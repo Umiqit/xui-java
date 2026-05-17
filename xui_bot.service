@@ -1,0 +1,15 @@
+[Unit]
+Description=XUI Telegram Bot (Java)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/xui_bot
+ExecStart=/usr/bin/java -jar /opt/xui_bot/xui-bot-1.0-SNAPSHOT.jar
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
