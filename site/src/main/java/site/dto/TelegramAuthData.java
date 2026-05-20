@@ -1,12 +1,24 @@
 package site.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class TelegramAuthData {
     private long id;
+
+    @JsonProperty("first_name")
     private String firstName;
+
+    @JsonProperty("last_name")
     private String lastName;
+
     private String username;
+
+    @JsonProperty("photo_url")
     private String photoUrl;
+
+    @JsonProperty("auth_date")
     private long authDate;
+
     private String hash;
 
     public long getId() { return id; }
@@ -29,4 +41,9 @@ public class TelegramAuthData {
 
     public String getHash() { return hash; }
     public void setHash(String hash) { this.hash = hash; }
+
+    @Override
+    public String toString() {
+        return "TelegramAuthData{id=" + id + ", username='" + username + "', authDate=" + authDate + "}";
+    }
 }
