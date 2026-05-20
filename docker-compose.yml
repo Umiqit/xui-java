@@ -67,6 +67,20 @@ services:
     networks:
       - xui-bot-net
 
+  site:
+    build: ./site
+    container_name: xui-bot-site
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8080"
+    networks:
+      - xui-bot-net
+
 networks:
   xui-bot-net:
     driver: bridge

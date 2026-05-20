@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Политика возврата — DreamCore</title>
+<style>
+
+:root {
+  --md-sys-color-primary: #ff9d00;
+  --md-sys-color-on-primary: #0a0a0a;
+  --md-sys-color-primary-container: rgba(255,157,0,0.12);
+  --md-sys-color-on-primary-container: #ff9d00;
+  --md-sys-color-secondary: #ff6b00;
+  --md-sys-color-surface: #141416;
+  --md-sys-color-surface-dim: #0f0f11;
+  --md-sys-color-surface-bright: #1c1c1f;
+  --md-sys-color-surface-container-lowest: #0a0a0c;
+  --md-sys-color-surface-container-low: #111113;
+  --md-sys-color-surface-container: #18181a;
+  --md-sys-color-surface-container-high: #1e1e21;
+  --md-sys-color-surface-container-highest: #252528;
+  --md-sys-color-on-surface: #f0f0f5;
+  --md-sys-color-on-surface-variant: #8a8a95;
+  --md-sys-color-outline: rgba(255,157,0,0.15);
+  --md-sys-color-outline-variant: rgba(255,157,0,0.08);
+  --md-elevation-1: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.24);
+  --md-elevation-2: 0 3px 6px rgba(0,0,0,0.32), 0 2px 4px rgba(0,0,0,0.24);
+  --md-elevation-3: 0 6px 12px rgba(0,0,0,0.35), 0 4px 8px rgba(0,0,0,0.28);
+  --md-elevation-4: 0 8px 16px rgba(0,0,0,0.38), 0 6px 12px rgba(0,0,0,0.30);
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 50%;
+  --md-sys-motion-easing-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --md-sys-motion-easing-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --md-sys-motion-duration-short: 150ms;
+  --md-sys-motion-duration-medium: 250ms;
+  --md-sys-motion-duration-long: 350ms;
+  --rail-width: 80px;
+  --gap: 16px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--md-sys-color-surface-dim);
+  color: var(--md-sys-color-on-surface);
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--md-sys-color-surface-dim); }
+::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--md-sys-color-primary); }
+
+/* ===== Rail Navigation ===== */
+.rail {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--rail-width);
+  background: var(--md-sys-color-surface-container);
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  z-index: 1000;
+  gap: 0.5rem;
+}
+
+.rail-logo {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+  border-radius: var(--md-sys-shape-corner-medium);
+  display: grid; place-items: center;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--md-elevation-1);
+}
+
+.rail-logo svg { width: 22px; height: 22px; fill: var(--md-sys-color-on-primary); }
+
+.rail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--md-sys-shape-corner-large);
+  color: var(--md-sys-color-on-surface-variant);
+  text-decoration: none;
+  font-size: 0.7rem;
+  font-weight: 500;
+  width: 64px;
+  transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.rail-item:hover {
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Organic random shimmer - never repeats the same way twice */
+@keyframes organicShimmer {
+  0% {
+    background-position: 0% 0%;
+    filter: hue-rotate(0deg) brightness(1) saturate(1);
+  }
+  12% {
+    background-position: 80% 20%;
+    filter: hue-rotate(8deg) brightness(1.15) saturate(1.1);
+  }
+  25% {
+    background-position: 40% 60%;
+    filter: hue-rotate(-5deg) brightness(1.05) saturate(0.95);
+  }
+  37% {
+    background-position: 90% 80%;
+    filter: hue-rotate(12deg) brightness(1.2) saturate(1.15);
+  }
+  50% {
+    background-position: 20% 90%;
+    filter: hue-rotate(-10deg) brightness(1.1) saturate(1);
+  }
+  62% {
+    background-position: 70% 40%;
+    filter: hue-rotate(5deg) brightness(1.18) saturate(1.08);
+  }
+  75% {
+    background-position: 10% 70%;
+    filter: hue-rotate(-8deg) brightness(1.02) saturate(0.92);
+  }
+  87% {
+    background-position: 60% 10%;
+    filter: hue-rotate(15deg) brightness(1.25) saturate(1.2);
+  }
+  100% {
+    background-position: 0% 0%;
+    filter: hue-rotate(0deg) brightness(1) saturate(1);
+  }
+}
+
+/* Pulsating glow that follows the shimmer */
+@keyframes organicGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 15px rgba(124,77,255,0.25), 
+      0 0 30px rgba(255,157,0,0.15),
+      inset 0 0 10px rgba(255,255,255,0.05);
+  }
+  25% {
+    box-shadow: 
+      0 0 20px rgba(255,107,0,0.35), 
+      0 0 40px rgba(124,77,255,0.2),
+      inset 0 0 15px rgba(255,255,255,0.08);
+  }
+  50% {
+    box-shadow: 
+      0 0 25px rgba(255,157,0,0.45), 
+      0 0 50px rgba(124,77,255,0.3),
+      inset 0 0 20px rgba(255,255,255,0.1);
+  }
+  75% {
+    box-shadow: 
+      0 0 18px rgba(157,107,255,0.3), 
+      0 0 35px rgba(255,107,0,0.25),
+      inset 0 0 12px rgba(255,255,255,0.06);
+  }
+}
+
+.rail-item.active {
+  background: linear-gradient(
+    160deg, 
+    #7c4dff 0%, 
+    #a855f7 12%,
+    #c084fc 20%,
+    #ff9d00 35%, 
+    #ff6b00 45%, 
+    #ff4500 52%,
+    #ff6b00 60%,
+    #ff9d00 70%,
+    #c084fc 82%,
+    #a855f7 90%,
+    #7c4dff 100%
+  );
+  background-size: 500% 500%;
+  animation: 
+    organicShimmer 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite,
+    organicGlow 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  color: #fff;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle inner light sweep */
+.rail-item.active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255,255,255,0.08) 25%,
+    rgba(255,255,255,0.15) 50%,
+    rgba(255,255,255,0.08) 75%,
+    transparent 100%
+  );
+  background-size: 300% 100%;
+  animation: lightSweep 6s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@keyframes lightSweep {
+  0%, 100% { background-position: -100% 0; }
+  50% { background-position: 200% 0; }
+}
+
+/* Active button hover - keep white text and icon */
+.rail-item.active:hover {
+  color: #fff;
+}
+
+.rail-item.active:hover svg {
+  fill: #fff;
+}
+
+.rail-item:hover {
+  color: #ff9d00;
+}
+
+.rail-item:hover svg {
+  fill: #ff9d00;
+}
+
+.rail-item.active svg {
+  fill: #fff;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.8));
+}
+
+.rail-item svg { width: 24px; height: 24px; fill: currentColor; }
+
+.rail-icon-only {
+  position: relative;
+}
+
+.rail-icon-only .rail-tooltip {
+  position: absolute;
+  left: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--md-sys-shape-corner-medium);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  box-shadow: var(--md-elevation-2);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.rail-icon-only:hover .rail-tooltip {
+  opacity: 1;
+  visibility: visible;
+  left: 75px;
+}
+
+.rail-divider {
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff9d00, #ff6b00, transparent);
+  margin: 0.5rem 0;
+  border-radius: 1px;
+  box-shadow: 0 0 8px rgba(255, 157, 0, 0.4);
+}
+
+/* ===== Main content ===== */
+.main {
+  margin-left: var(--rail-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  width: 100%;
+}
+
+/* ===== Hero ===== */
+.hero { padding: 3rem 0 2rem; }
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hero-text h1 {
+  font-size: 3.5rem;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.hero-text p {
+  font-size: 1.125rem;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.6;
+  max-width: 440px;
+}
+
+.hero-visual {
+  aspect-ratio: 4/3;
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  background: linear-gradient(135deg, #7c4dff 0%, #ff9d00 50%, #ff6b00 100%);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--md-elevation-4);
+}
+
+.hero-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 30% 70%, rgba(255,255,255,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 70% 30%, rgba(0,0,0,0.2) 0%, transparent 50%);
+}
+
+.hero-visual::after {
+  content: '';
+  position: absolute;
+  inset: 20%;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: var(--md-sys-shape-corner-large);
+  transform: rotate(-5deg);
+}
+
+/* ===== Neon Glow Buttons ===== */
+.btn-wrap {
+  position: relative;
+  padding: 3px;
+  background: linear-gradient(90deg, #ff9d00, #ff6b00, #ff4500);
+  border-radius: 0.9em;
+  transition: all 0.4s ease;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.btn-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 0.9em;
+  z-index: -1;
+  filter: blur(0);
+  transition: filter 0.4s ease;
+}
+
+.btn-wrap:hover::before {
+  background: linear-gradient(90deg, #ff9d00, #ff6b00, #ff4500);
+  filter: blur(1.2em);
+}
+
+.btn-wrap:active::before {
+  filter: blur(0.2em);
+}
+
+.btn-wrap .btn-inner {
+  font-size: 0.95rem;
+  padding: 0.65em 1.4em;
+  border-radius: 0.5em;
+  border: none;
+  background: linear-gradient(135deg, #ff9d00, #ff6b00);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 2px 2px 3px rgba(0,0,0,0.7);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn-wrap .btn-inner:hover {
+  background-color: #111;
+}
+
+.btn-wrap .btn-inner:active {
+  transform: scale(0.97);
+}
+
+/* Small variant */
+.btn-wrap-sm {
+  padding: 2px;
+  border-radius: 0.7em;
+}
+
+.btn-wrap-sm::before { border-radius: 0.7em; }
+.btn-wrap-sm .btn-inner {
+  font-size: 0.8rem;
+  padding: 0.5em 1em;
+  border-radius: 0.4em;
+}
+
+/* Large variant */
+.btn-wrap-lg {
+  padding: 4px;
+  border-radius: 1em;
+}
+
+.btn-wrap-lg::before { border-radius: 1em; }
+.btn-wrap-lg .btn-inner {
+  font-size: 1.1rem;
+  padding: 0.8em 2em;
+  border-radius: 0.6em;
+}
+
+/* ===== Section title ===== */
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== Bento cards ===== */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gap);
+  padding-bottom: 2rem;
+}
+
+.bento-card {
+  background: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-large);
+  padding: 1.5rem;
+  transition: all var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-standard);
+  box-shadow: var(--md-elevation-1);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bento-card:hover {
+  background: var(--md-sys-color-surface-container-high);
+  box-shadow: var(--md-elevation-3);
+  transform: translateY(-2px);
+}
+
+.bento-card .card-icon {
+  width: 48px; height: 48px;
+  border-radius: var(--md-sys-shape-corner-medium);
+  background: var(--md-sys-color-primary-container);
+  display: grid; place-items: center;
+}
+
+.bento-card .card-icon svg { width: 24px; height: 24px; fill: var(--md-sys-color-primary); }
+.bento-card h3 { font-size: 1.125rem; font-weight: 500; }
+.bento-card p { font-size: 0.875rem; color: var(--md-sys-color-on-surface-variant); line-height: 1.6; }
+
+/* ===== Stats ===== */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap);
+  padding: 1.5rem 0 2.5rem;
+}
+
+.stat-card {
+  background: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-large);
+  padding: 1.25rem;
+  text-align: center;
+  box-shadow: var(--md-elevation-1);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: all var(--md-sys-motion-duration-medium);
+}
+
+.stat-card:hover { box-shadow: var(--md-elevation-2); }
+.stat-card .stat-num { font-size: 2rem; font-weight: 700; color: var(--md-sys-color-on-surface); line-height: 1; }
+.stat-card .stat-label { font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.5rem; font-weight: 500; }
+
+/* ===== CTA ===== */
+.cta-section { padding: 2rem 0 3rem; }
+
+.cta-card {
+  background: linear-gradient(135deg, var(--md-sys-color-surface-container-high), var(--md-sys-color-surface-container));
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  padding: 3rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--md-elevation-2);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+}
+
+.cta-card h2 { font-size: 2rem; font-weight: 400; }
+.cta-card p { color: var(--md-sys-color-on-surface-variant); max-width: 420px; }
+
+/* ===== Footer ===== */
+.footer {
+  margin-top: auto;
+  padding: 1.5rem 0 2rem;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: var(--md-sys-color-on-surface-variant);
+  text-decoration: none;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: color var(--md-sys-motion-duration-short);
+}
+
+.footer-links a:hover { color: var(--md-sys-color-primary); }
+.footer-links svg { width: 14px; height: 14px; fill: currentColor; }
+
+.footer-copy {
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.78rem;
+  margin-top: 1.5rem;
+  opacity: 0.6;
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  opacity: 0;
+  transition: opacity var(--md-sys-motion-duration-medium);
+}
+
+.modal-overlay.active { display: flex; opacity: 1; }
+
+.modal-box {
+  background: var(--md-sys-color-surface-container-high);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--md-elevation-4);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transform: scale(0.85) translateY(20px);
+  transition: transform var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-decelerate);
+}
+
+.modal-overlay.active .modal-box { transform: scale(1) translateY(0); }
+
+.modal-icon {
+  width: 48px; height: 48px;
+  background: var(--md-sys-color-primary-container);
+  border-radius: var(--md-sys-shape-corner-large);
+  display: grid; place-items: center;
+  margin: 0 auto 1rem;
+}
+
+.modal-icon svg { width: 24px; height: 24px; fill: var(--md-sys-color-primary); }
+
+/* ===== Gradient text ===== */
+.gradient-text {
+  background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary), #ff4500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.anim {
+  animation: fadeUp var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-decelerate) forwards;
+  opacity: 0;
+}
+
+.anim-d1 { animation-delay: 50ms; }
+.anim-d2 { animation-delay: 100ms; }
+.anim-d3 { animation-delay: 150ms; }
+.anim-d4 { animation-delay: 200ms; }
+.anim-d5 { animation-delay: 250ms; }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .rail { width: 64px; }
+  .rail-item span { display: none; }
+  .rail-item { width: 48px; padding: 0.75rem 0; }
+  .main { margin-left: 64px; }
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero-visual { aspect-ratio: 16/9; max-height: 300px; }
+  .hero-text h1 { font-size: 2.5rem; }
+  .bento-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .rail { display: none; }
+  .main { margin-left: 0; }
+  .container { padding: 0 1rem; }
+  .hero-text h1 { font-size: 2rem; }
+  .bento-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .cta-card { padding: 2rem 1.5rem; }
+  .footer-inner { flex-direction: column; text-align: center; }
+}
+
+/* Page layout */
+.page-content {
+  padding: 2rem 0;
+}
+
+.page-header {
+  padding: 1.5rem 0 2rem;
+}
+
+.page-header h1 {
+  font-size: 2.8rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.page-header p {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 1.1rem;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap);
+  padding-bottom: 2rem;
+}
+
+.content-card {
+  background: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-large);
+  padding: 1.5rem;
+  box-shadow: var(--md-elevation-1);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: all var(--md-sys-motion-duration-medium);
+}
+
+.content-card:hover {
+  box-shadow: var(--md-elevation-2);
+}
+
+.content-card h2 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--md-sys-color-primary);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.content-card h3 {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  margin: 1rem 0 0.5rem;
+}
+
+.content-card p {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+
+.content-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.content-card ul li {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.9rem;
+  padding: 0.35rem 0;
+  padding-left: 1.2rem;
+  position: relative;
+  line-height: 1.6;
+}
+
+.content-card ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.8rem;
+  width: 5px;
+  height: 5px;
+  background: var(--md-sys-color-primary);
+  border-radius: 50%;
+}
+
+.content-card strong {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  transition: gap 0.2s;
+}
+
+.back-link:hover { gap: 0.75rem; }
+
+.back-link svg { width:18px; height:18px; fill:var(--md-sys-color-primary); }
+
+@media (max-width: 768px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .page-header h1 { font-size: 2rem; }
+}
+
+.anim { animation: fadeUp var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-decelerate) forwards; opacity:0; }
+.anim-d1 { animation-delay: 50ms; }
+.anim-d2 { animation-delay: 100ms; }
+.anim-d3 { animation-delay: 150ms; }
+.anim-d4 { animation-delay: 200ms; }
+</style>
+</head>
+<body>
+
+<!-- Rail Navigation -->
+<nav class="rail">
+  <div class="rail-logo">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+  </div>
+
+  <a href="index.html" class="rail-item">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    <span>Главная</span>
+  </a>
+
+  <button class="rail-item" onclick="openModal()">
+    <svg viewBox="0 0 24 24"><path d="M13 7h-2v4L8.5 9.5 7 11l4.5 4.5L13 14v4h2v-4l1.5 1.5L18 14l-4.5-4.5L13 11V7zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+    <span>Начало</span>
+  </button>
+
+  <button class="rail-item" onclick="openModal()">
+    <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+    <span>Тарифы</span>
+  </button>
+
+  <div class="rail-divider"></div>
+
+  <button class="rail-item" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+    <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+    <span>Функции</span>
+  </button>
+
+  <button class="rail-item" onclick="openModal()">
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/></svg>
+    <span>Поддержка</span>
+  </button>
+
+  <div class="rail-divider"></div>
+
+  <a href="return-policy.html" class="rail-item rail-icon-only active" title="Политика возврата">
+    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+    <span class="rail-tooltip">Возврат</span>
+  </a>
+
+  <a href="offer.html" class="rail-item rail-icon-only" title="Оферта">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+    <span class="rail-tooltip">Оферта</span>
+  </a>
+
+  <a href="privacy.html" class="rail-item rail-icon-only" title="Конфиденциальность">
+    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+    <span class="rail-tooltip">Конфиденциальность</span>
+  </a>
+</nav>
+
+<!-- Main Content -->
+<div class="main">
+
+  <main class="container page-content">
+    <a href="index.html" class="back-link anim">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      Вернуться на главную
+    </a>
+
+    <div class="page-header anim">
+      <h1>Политика <span class="gradient-text">возврата</span></h1>
+      <p>Прозрачные условия возврата денежных средств</p>
+    </div>
+
+    <div class="content-grid">
+      
+      <div class="content-card anim anim-d1">
+        <h2>1. Общие положения</h2>
+        <p>Настоящая Политика возврата регулирует порядок возврата денежных средств за приобретённые услуги DreamCore. Мы стремимся обеспечить максимальную прозрачность и честность в отношениях с нашими пользователями.</p>
+        <p>Приобретая наши услуги, вы соглашаетесь с условиями, изложенными в данном документе.</p>
+      </div>
+
+      <div class="content-card anim anim-d2">
+        <h2>2. Условия возврата</h2>
+        <h3>Право на возврат</h3>
+        <p>Вы имеете право на полный возврат в следующих случаях:</p>
+        <ul>
+          <li>Услуга не активирована в течение 24 часов по нашим причинам</li>
+          <li>Невозможность подключения в течение 72 часов</li>
+          <li>Существенное несоответствие заявленным характеристикам</li>
+        </ul>
+        <h3>Сроки</h3>
+        <p>Заявка подаётся в течение <strong>14 дней</strong> с момента оплаты при условии использования менее 50% периода.</p>
+      </div>
+
+      <div class="content-card anim anim-d3">
+        <h2>3. Порядок оформления</h2>
+        <p>Для оформления возврата необходимо:</p>
+        <ul>
+          <li>Отправить запрос через форму обратной связи или email</li>
+          <li>Указать номер заказа и причину возврата</li>
+          <li>Предоставить подтверждение оплаты</li>
+        </ul>
+        <p>Рассмотрение заявки — <strong>3-5 рабочих дней</strong>.</p>
+      </div>
+
+      <div class="content-card anim anim-d3">
+        <h2>4. Исключения</h2>
+        <p>Возврат не осуществляется если:</p>
+        <ul>
+          <li>Нарушены условия Пользовательского соглашения</li>
+          <li>Услуга использовалась для незаконных целей</li>
+          <li>Просрчен срок подачи заявки</li>
+          <li>Ранее использовался пробный период</li>
+        </ul>
+      </div>
+
+      <div class="content-card anim anim-d4" style="grid-column: span 2;">
+        <h2>5. Способы возврата</h2>
+        <p>Денежные средства возвращаются тем же способом оплаты:</p>
+        <ul>
+          <li><strong>Банковская карта</strong> — в течение 5-10 рабочих дней</li>
+          <li><strong>Электронные кошельки</strong> — в течение 1-3 рабочих дней</li>
+          <li><strong>Криптовалюта</strong> — в течение 24 часов</li>
+        </ul>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a href="index.html" style="font-size:1.1rem; text-decoration:none; color:var(--md-sys-color-on-surface); display:flex; align-items:center; gap:0.5rem; font-weight:700;">
+          <div class="rail-logo" style="margin:0; width:28px; height:28px;">
+            <svg viewBox="0 0 24 24" style="width:16px; height:16px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+          </div>
+          DreamCore
+        </a>
+        <div class="footer-links">
+          <a href="return-policy.html">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            Политика возврата
+          </a>
+          <a href="offer.html">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            Оферта
+          </a>
+          <a href="privacy.html">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+            Конфиденциальность
+          </a>
+        </div>
+      </div>
+      <div class="footer-copy">© 2026 DreamCore. Воплощаем цифровые мечты.</div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+    </div>
+    <h3 style="font-size:1.25rem; font-weight:500; margin-bottom:0.5rem;">Скоро в Telegram</h3>
+    <p style="color:var(--md-sys-color-on-surface-variant); font-size:0.9rem; margin-bottom:1.5rem;">
+      Наш канал в разработке. Скоро вы сможете подключиться к DreamCore через Telegram-бота.
+    </p>
+    <!-- Neon button in modal -->
+    <div class="btn-wrap" onclick="closeModal()">
+      <button class="btn-inner">Понятно</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal() {
+  document.getElementById('modal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(e) {
+  if (!e || e.target.id === 'modal') {
+    document.getElementById('modal').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+</script>
+
+</body>
+</html>

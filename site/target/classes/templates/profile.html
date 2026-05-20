@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет — DreamCore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .profile-header { background: #fff; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .key-card { background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .stat { font-size: 1.1rem; font-weight: 600; color: #0d6efd; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">DreamCore</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="/profile">Профиль</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Выйти</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="profile-header">
+            <h4 th:text="'@' + ${user.username}">@username</h4>
+            <p class="text-muted mb-1" th:text="${user.fullName}">Full Name</p>
+            <p class="mb-0">Баланс: <span class="stat" th:text="${user.balance} + ' ₽'">0 ₽</span></p>
+        </div>
+
+        <h5 class="mb-3">Мои ключи</h5>
+        <div th:if="${keys.isEmpty()}" class="alert alert-info">У вас пока нет активных ключей.</div>
+        <div th:each="key : ${keys}" class="key-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 th:text="${key.remark != null && !key.remark.isEmpty()} ? ${key.remark} : ${key.xuiEmail}">Email</h6>
+                    <small class="text-muted" th:text="'UUID: ' + ${key.xuiClientId}">UUID</small>
+                </div>
+                <span th:if="${key.expired}" class="badge bg-danger">Истёк</span>
+                <span th:unless="${key.expired}" class="badge bg-success">Активен</span>
+            </div>
+            <div class="row mt-3 text-center">
+                <div class="col-4">
+                    <small class="text-muted">Исходящий</small>
+                    <div class="stat" th:text="${#numbers.formatDecimal(key.trafficUp / (1024*1024*1024.0), 1, 2)} + ' GB'">0 GB</div>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted">Входящий</small>
+                    <div class="stat" th:text="${#numbers.formatDecimal(key.trafficDown / (1024*1024*1024.0), 1, 2)} + ' GB'">0 GB</div>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted">Лимит</small>
+                    <div class="stat" th:text="${key.trafficTotal > 0} ? ${#numbers.formatDecimal(key.trafficTotal / (1024*1024*1024.0), 1, 2)} + ' GB' : '∞'">∞</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

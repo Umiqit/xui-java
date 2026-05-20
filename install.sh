@@ -168,6 +168,7 @@ copy_project() {
     mkdir -p "$INSTALL_DIR/data/npm-letsencrypt"
     mkdir -p "$INSTALL_DIR/data/portainer"
     mkdir -p "$INSTALL_DIR/logs"
+    mkdir -p "$INSTALL_DIR/site"
 
     ok "Project copied to $INSTALL_DIR"
 }

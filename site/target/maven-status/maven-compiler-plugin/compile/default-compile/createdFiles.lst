@@ -1,0 +1,13 @@
+site\controller\AuthController.class
+site\dto\TelegramAuthData.class
+site\controller\ProfileController.class
+site\repository\KeyRepository.class
+site\controller\AdminController.class
+site\entity\Key.class
+site\DreamCoreSiteApplication.class
+site\entity\User.class
+site\service\UserService.class
+site\entity\Payment.class
+site\repository\PaymentRepository.class
+site\service\TelegramAuthService.class
+site\repository\UserRepository.class

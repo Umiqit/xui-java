@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — DreamCore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .section { background: #fff; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .table-responsive { max-height: 400px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">DreamCore</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/profile">Профиль</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/admin">Админ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Выйти</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h4 class="mb-4">Админ-панель</h4>
+
+        <div class="section">
+            <h6>Пользователи (<span th:text="${users.size()}">0</span>)</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead><tr><th>ID</th><th>TG ID</th><th>Username</th><th>Имя</th><th>Баланс</th><th>Дата рег.</th></tr></thead>
+                    <tbody>
+                        <tr th:each="u : ${users}">
+                            <td th:text="${u.id}"></td>
+                            <td th:text="${u.tgId}"></td>
+                            <td th:text="${u.username}"></td>
+                            <td th:text="${u.fullName}"></td>
+                            <td th:text="${u.balance}"></td>
+                            <td th:text="${u.createdAt}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h6>Ключи (<span th:text="${keys.size()}">0</span>)</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead><tr><th>ID</th><th>User ID</th><th>Email</th><th>Remark</th><th>Лимит (GB)</th><th>Истекает</th></tr></thead>
+                    <tbody>
+                        <tr th:each="k : ${keys}">
+                            <td th:text="${k.id}"></td>
+                            <td th:text="${k.userId}"></td>
+                            <td th:text="${k.xuiEmail}"></td>
+                            <td th:text="${k.remark}"></td>
+                            <td th:text="${k.trafficTotal > 0} ? ${#numbers.formatDecimal(k.trafficTotal / (1024*1024*1024.0), 1, 2)} : '∞'"></td>
+                            <td th:text="${k.expiryTs > 0} ? ${#dates.format(new java.util.Date(k.expiryTs), 'dd.MM.yyyy')} : 'Без срока'"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h6>Платежи (<span th:text="${payments.size()}">0</span>)</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead><tr><th>ID</th><th>User ID</th><th>Сумма</th><th>Валюта</th><th>Статус</th><th>Дата</th></tr></thead>
+                    <tbody>
+                        <tr th:each="p : ${payments}">
+                            <td th:text="${p.id}"></td>
+                            <td th:text="${p.userId}"></td>
+                            <td th:text="${p.amount}"></td>
+                            <td th:text="${p.currency}"></td>
+                            <td><span class="badge" th:classappend="${p.status == 'completed'} ? 'bg-success' : 'bg-warning'" th:text="${p.status}"></span></td>
+                            <td th:text="${p.createdAt}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
