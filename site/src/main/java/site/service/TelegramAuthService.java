@@ -1,5 +1,8 @@
 package site.service;
 
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import site.dto.TelegramAuthData;
@@ -13,13 +16,28 @@ import java.util.TreeMap;
 @Service
 public class TelegramAuthService {
 
+    private static final Logger log = LoggerFactory.getLogger(TelegramAuthService.class);
+
     @Value("${telegram.bot-token}")
     private String botToken;
 
+    @PostConstruct
+    public void init() {
+        if (botToken == null || botToken.isBlank()) {
+            log.error("BOT_TOKEN is not set! Telegram auth will fail.");
+        } else {
+            log.info("TelegramAuthService initialized. Token length: {}", botToken.length());
+        }
+    }
+
     public boolean verify(TelegramAuthData data) {
         if (botToken == null || botToken.isBlank()) {
+            log.error("Cannot verify Telegram auth: BOT_TOKEN is empty");
             return false;
         }
+
+        log.info("Verifying Telegram auth for id={}, username={}, authDate={}",
+                data.getId(), data.getUsername(), data.getAuthDate());
 
         Map<String, String> fields = new TreeMap<>();
         fields.put("auth_date", String.valueOf(data.getAuthDate()));
@@ -43,6 +61,7 @@ public class TelegramAuthService {
             sb.append(entry.getKey()).append("=").append(entry.getValue());
         }
         String dataCheckString = sb.toString();
+        log.debug("dataCheckString: {}", dataCheckString);
 
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
@@ -56,8 +75,14 @@ public class TelegramAuthService {
             byte[] hashBytes = mac2.doFinal(dataCheckString.getBytes(StandardCharsets.UTF_8));
 
             String computedHash = bytesToHex(hashBytes);
-            return computedHash.equalsIgnoreCase(data.getHash());
+            log.info("Computed hash: {}, Received hash: {}", computedHash, data.getHash());
+            boolean ok = computedHash.equalsIgnoreCase(data.getHash());
+            if (!ok) {
+                log.warn("Hash mismatch! Auth failed.");
+            }
+            return ok;
         } catch (Exception e) {
+            log.error("Error verifying Telegram auth", e);
             return false;
         }
     }
