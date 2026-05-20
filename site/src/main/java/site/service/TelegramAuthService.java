@@ -25,8 +25,10 @@ public class TelegramAuthService {
     @PostConstruct
     public void init() {
         if (botToken == null || botToken.isBlank()) {
+            System.err.println("[TelegramAuthService] BOT_TOKEN is not set!");
             log.error("BOT_TOKEN is not set! Telegram auth will fail.");
         } else {
+            System.out.println("[TelegramAuthService] Initialized. Token length: " + botToken.length());
             log.info("TelegramAuthService initialized. Token length: {}", botToken.length());
         }
     }
@@ -37,6 +39,8 @@ public class TelegramAuthService {
             return false;
         }
 
+        System.out.println("[TelegramAuthService] Verifying auth for id=" + data.getId() +
+                ", username=" + data.getUsername() + ", authDate=" + data.getAuthDate());
         log.info("Verifying Telegram auth for id={}, username={}, authDate={}",
                 data.getId(), data.getUsername(), data.getAuthDate());
 
@@ -75,9 +79,12 @@ public class TelegramAuthService {
             byte[] hashBytes = mac.doFinal(dataCheckString.getBytes(StandardCharsets.UTF_8));
 
             String computedHash = bytesToHex(hashBytes);
+            System.out.println("[TelegramAuthService] Computed hash: " + computedHash +
+                    ", Received hash: " + data.getHash());
             log.info("Computed hash: {}, Received hash: {}", computedHash, data.getHash());
             boolean ok = computedHash.equalsIgnoreCase(data.getHash());
             if (!ok) {
+                System.out.println("[TelegramAuthService] Hash mismatch!");
                 log.warn("Hash mismatch! Auth failed.");
             }
             return ok;
