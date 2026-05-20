@@ -48,6 +48,61 @@ install_docker() {
     ok "Docker installed"
 }
 
+prompt() {
+    local prompt_text="$1"
+    local default_value="$2"
+    local is_required="$3"
+    local value
+
+    while true; do
+        if [ -n "$default_value" ]; then
+            read -rp "$prompt_text [$default_value]: " value
+        else
+            read -rp "$prompt_text: " value
+        fi
+
+        if [ -z "$value" ] && [ -n "$default_value" ]; then
+            value="$default_value"
+        fi
+
+        if [ "$is_required" = "required" ] && [ -z "$value" ]; then
+            warn "This field is required. Please enter a value."
+            continue
+        fi
+
+        printf '%s' "$value"
+        return
+    done
+}
+
+prompt_secret() {
+    local prompt_text="$1"
+    local default_value="$2"
+    local is_required="$3"
+    local value
+
+    while true; do
+        if [ -n "$default_value" ]; then
+            read -rsp "$prompt_text [$default_value]: " value
+        else
+            read -rsp "$prompt_text: " value
+        fi
+        echo >&2
+
+        if [ -z "$value" ] && [ -n "$default_value" ]; then
+            value="$default_value"
+        fi
+
+        if [ "$is_required" = "required" ] && [ -z "$value" ]; then
+            warn "This field is required. Please enter a value." >&2
+            continue
+        fi
+
+        printf '%s' "$value"
+        return
+    done
+}
+
 generate_env() {
     local env_file="$INSTALL_DIR/.env"
     if [ -f "$env_file" ]; then
@@ -55,21 +110,34 @@ generate_env() {
         return
     fi
 
-    info "Generating .env file..."
-    local db_pass
+    info "Interactive setup: please answer the following questions."
+    echo ""
+
+    local bot_token bot_username admin_ids xui_url xui_username xui_password xui_cert_path db_pass
+
+    bot_token=$(prompt_secret "Telegram Bot Token (from @BotFather)" "" "required")
+    echo ""
+    bot_username=$(prompt "Telegram Bot Username (without @)" "" "required")
+    admin_ids=$(prompt "Admin Telegram IDs (comma-separated)" "" "required")
+    xui_url=$(prompt "XUI Panel URL (e.g. https://panel.example.com:54321)" "" "required")
+    xui_username=$(prompt "XUI Panel Username" "" "required")
+    xui_password=$(prompt_secret "XUI Panel Password" "" "required")
+    echo ""
+    xui_cert_path=$(prompt "XUI Certificate Path (leave empty if not needed)" "")
+
     db_pass=$(openssl rand -base64 32 2>/dev/null || tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
 
     cat > "$env_file" <<EOF
 # Telegram Bot
-BOT_TOKEN=
-BOT_USERNAME=
-ADMIN_IDS=
+BOT_TOKEN=${bot_token}
+BOT_USERNAME=${bot_username}
+ADMIN_IDS=${admin_ids}
 
 # XUI Panel
-XUI_URL=
-XUI_USERNAME=
-XUI_PASSWORD=
-XUI_CERT_PATH=
+XUI_URL=${xui_url}
+XUI_USERNAME=${xui_username}
+XUI_PASSWORD=${xui_password}
+XUI_CERT_PATH=${xui_cert_path}
 
 # Database: sqlite | postgres
 DB_TYPE=postgres
@@ -81,7 +149,6 @@ DB_PASSWORD=${db_pass}
 EOF
 
     ok ".env created at $env_file"
-    warn "IMPORTANT: Edit $env_file and fill in BOT_TOKEN, BOT_USERNAME, ADMIN_IDS, XUI_URL, XUI_USERNAME, XUI_PASSWORD before starting!"
 }
 
 copy_project() {
@@ -99,6 +166,7 @@ copy_project() {
     mkdir -p "$INSTALL_DIR/data/postgres"
     mkdir -p "$INSTALL_DIR/data/npm-data"
     mkdir -p "$INSTALL_DIR/data/npm-letsencrypt"
+    mkdir -p "$INSTALL_DIR/data/portainer"
     mkdir -p "$INSTALL_DIR/logs"
 
     ok "Project copied to $INSTALL_DIR"
@@ -113,12 +181,14 @@ do_install() {
     ok "Installation complete!"
     echo ""
     echo -e "${GREEN}Next steps:${NC}"
-    echo "  1. Edit ${YELLOW}$INSTALL_DIR/.env${NC} with your credentials"
-    echo "  2. Run ${YELLOW}$0 start${NC} to launch everything"
+    echo "  Run ${YELLOW}$0 start${NC} to launch everything"
     echo ""
     echo -e "${GREEN}Nginx Proxy Manager${NC} will be available at:"
     echo "  http://YOUR_SERVER_IP:81"
     echo "  Default login: admin@example.com / changeme"
+    echo ""
+    echo -e "${GREEN}Portainer${NC} will be available at:"
+    echo "  http://YOUR_SERVER_IP:9000"
 }
 
 do_start() {
@@ -218,9 +288,6 @@ case "${1:-}" in
     status)
         do_status
         ;;
-    debug)
-        do_debug
-        ;;
     logs)
         shift
         do_logs "$@"
@@ -235,7 +302,7 @@ case "${1:-}" in
         echo "Usage: $0 {install|start|debug|stop|restart|status|logs [service]|update|uninstall}"
         echo ""
         echo "Commands:"
-        echo "  install    - Full installation (Docker, project files, .env)"
+        echo "  install    - Full installation (Docker, project files, interactive .env setup)"
         echo "  start      - Build and start all containers"
         echo "  stop       - Stop all containers"
         echo "  restart    - Restart all containers"
