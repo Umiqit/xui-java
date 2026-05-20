@@ -29,9 +29,9 @@ public class Settings {
         env = Dotenv.configure().ignoreIfMissing().load();
         BOT_TOKEN    = require("BOT_TOKEN");
         BOT_USERNAME = require("BOT_USERNAME");
-        XUI_URL      = require("XUI_URL");
-        XUI_USERNAME = require("XUI_USERNAME");
-        XUI_PASSWORD = require("XUI_PASSWORD");
+        XUI_URL      = get("XUI_URL", "");
+        XUI_USERNAME = get("XUI_USERNAME", "");
+        XUI_PASSWORD = get("XUI_PASSWORD", "");
         XUI_CERT_PATH = get("XUI_CERT_PATH", "");
 
         DB_TYPE = get("DB_TYPE", "sqlite").toLowerCase();
@@ -81,6 +81,10 @@ public class Settings {
             }
         }
         return List.copyOf(ids);
+    }
+
+    public boolean isXuiEnabled() {
+        return XUI_URL != null && !XUI_URL.isBlank();
     }
 
     public static Settings get() { return INSTANCE; }

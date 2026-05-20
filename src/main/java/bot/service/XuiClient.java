@@ -32,8 +32,20 @@ public class XuiClient {
     private final String baseUrl;
 
     private XuiClient() {
-        baseUrl = Settings.get().XUI_URL.replaceAll("/+$", "");
-        http = buildClient();
+        String url = Settings.get().XUI_URL;
+        if (url == null || url.isBlank()) {
+            this.baseUrl = null;
+            this.http = null;
+        } else {
+            this.baseUrl = url.replaceAll("/+$", "");
+            this.http = buildClient();
+        }
+    }
+
+    private void ensureEnabled() {
+        if (baseUrl == null) {
+            throw new XuiApiException("XUI panel is not configured");
+        }
     }
 
     public static XuiClient get() { return INSTANCE; }
@@ -70,6 +82,7 @@ public class XuiClient {
     }
 
     public void login() {
+        ensureEnabled();
         String body = "username=" + Settings.get().XUI_USERNAME +
                       "&password=" + Settings.get().XUI_PASSWORD;
         Request req = new Request.Builder()
@@ -99,6 +112,7 @@ public class XuiClient {
     }
 
     public List<JsonNode> getInbounds() {
+        ensureEnabled();
         try {
             Request req = new Request.Builder().url(baseUrl + "/xui/inbound/list").get().build();
             JsonNode data = doRequest(req);
@@ -112,6 +126,7 @@ public class XuiClient {
     }
 
     public JsonNode getClientStats(String email) {
+        ensureEnabled();
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/getClientTraffics/" + email)
@@ -128,6 +143,7 @@ public class XuiClient {
     public AddResult addClient(int inboundId, String email, String remark,
                                long expiryTime, int totalGb) {
         String clientId = UUID.randomUUID().toString();
+        ensureEnabled();
         long totalBytes = totalGb > 0 ? (long) totalGb * 1024 * 1024 * 1024 : 0;
 
         ObjectNode client = mapper.createObjectNode();
@@ -163,6 +179,7 @@ public class XuiClient {
     }
 
     public boolean deleteClient(int inboundId, String clientId) {
+        ensureEnabled();
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/" + inboundId + "/delClient/" + clientId)
@@ -176,6 +193,7 @@ public class XuiClient {
     }
 
     public boolean resetClientTraffic(int inboundId, String email) {
+        ensureEnabled();
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/" + inboundId + "/resetClientTraffic/" + email)

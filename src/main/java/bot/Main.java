@@ -33,11 +33,15 @@ public class Main extends TelegramLongPollingBot {
 
     public static void main(String[] args) throws TelegramApiException {
         Database.init();
-        try {
-            XuiClient.get().login();
-            log.info("XUI login: OK");
-        } catch (XuiApiException e) {
-            log.error("XUI login failed: {}", e.getMessage());
+        if (Settings.get().isXuiEnabled()) {
+            try {
+                XuiClient.get().login();
+                log.info("XUI login: OK");
+            } catch (XuiApiException e) {
+                log.error("XUI login failed: {}", e.getMessage());
+            }
+        } else {
+            log.info("XUI panel not configured, skipping login");
         }
 
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
