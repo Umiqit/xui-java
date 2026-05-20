@@ -10,6 +10,7 @@ import site.dto.TelegramAuthData;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -64,15 +65,14 @@ public class TelegramAuthService {
         log.debug("dataCheckString: {}", dataCheckString);
 
         try {
-            Mac mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secretKey = new SecretKeySpec(botToken.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-            mac.init(secretKey);
-            byte[] secretKeyBytes = mac.doFinal("WebAppData".getBytes(StandardCharsets.UTF_8));
+            // Login Widget uses SHA256(botToken) as secret key
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] secretKeyBytes = digest.digest(botToken.getBytes(StandardCharsets.UTF_8));
 
-            Mac mac2 = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secretKey2 = new SecretKeySpec(secretKeyBytes, "HmacSHA256");
-            mac2.init(secretKey2);
-            byte[] hashBytes = mac2.doFinal(dataCheckString.getBytes(StandardCharsets.UTF_8));
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKey = new SecretKeySpec(secretKeyBytes, "HmacSHA256");
+            mac.init(secretKey);
+            byte[] hashBytes = mac.doFinal(dataCheckString.getBytes(StandardCharsets.UTF_8));
 
             String computedHash = bytesToHex(hashBytes);
             log.info("Computed hash: {}, Received hash: {}", computedHash, data.getHash());
