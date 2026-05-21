@@ -1,88 +1,1000 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель — DreamCore</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background: #f8f9fa; }
-        .section { background: #fff; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .table-responsive { max-height: 400px; overflow-y: auto; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ-панель — DreamCore</title>
+  <style>
+    :root {
+      --md-sys-color-primary: #ff9d00;
+      --md-sys-color-on-primary: #0a0a0a;
+      --md-sys-color-primary-container: rgba(255, 157, 0, 0.12);
+      --md-sys-color-on-primary-container: #ff9d00;
+      --md-sys-color-secondary: #ff6b00;
+      --md-sys-color-surface: #141416;
+      --md-sys-color-surface-dim: #0f0f11;
+      --md-sys-color-surface-bright: #1c1c1f;
+      --md-sys-color-surface-container-lowest: #0a0a0c;
+      --md-sys-color-surface-container-low: #111113;
+      --md-sys-color-surface-container: #18181a;
+      --md-sys-color-surface-container-high: #1e1e21;
+      --md-sys-color-surface-container-highest: #252528;
+      --md-sys-color-on-surface: #f0f0f5;
+      --md-sys-color-on-surface-variant: #8a8a95;
+      --md-sys-color-outline: rgba(255, 157, 0, 0.15);
+      --md-sys-color-outline-variant: rgba(255, 157, 0, 0.08);
+      --md-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+      --md-elevation-2: 0 3px 6px rgba(0, 0, 0, 0.32), 0 2px 4px rgba(0, 0, 0, 0.24);
+      --md-elevation-3: 0 6px 12px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.28);
+      --md-elevation-4: 0 8px 16px rgba(0, 0, 0, 0.38), 0 6px 12px rgba(0, 0, 0, 0.30);
+      --md-sys-shape-corner-none: 0px;
+      --md-sys-shape-corner-extra-small: 4px;
+      --md-sys-shape-corner-small: 8px;
+      --md-sys-shape-corner-medium: 12px;
+      --md-sys-shape-corner-large: 16px;
+      --md-sys-shape-corner-extra-large: 28px;
+      --md-sys-shape-corner-full: 50%;
+      --md-sys-motion-easing-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
+      --md-sys-motion-easing-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1);
+      --md-sys-motion-duration-short: 150ms;
+      --md-sys-motion-duration-medium: 250ms;
+      --md-sys-motion-duration-long: 350ms;
+      --rail-width: 80px;
+      --gap: 16px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--md-sys-color-surface-dim);
+      color: var(--md-sys-color-on-surface);
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--md-sys-color-surface-dim);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--md-sys-color-outline);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--md-sys-color-primary);
+    }
+
+    /* ===== Rail Navigation ===== */
+    .rail {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--rail-width);
+      background: var(--md-sys-color-surface-container);
+      border-right: 1px solid var(--md-sys-color-outline-variant);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0;
+      z-index: 1000;
+      gap: 0.5rem;
+    }
+
+    .rail-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+      border-radius: var(--md-sys-shape-corner-medium);
+      display: grid;
+      place-items: center;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--md-elevation-1);
+    }
+
+    .rail-logo svg {
+      width: 22px;
+      height: 22px;
+      fill: var(--md-sys-color-on-primary);
+    }
+
+    .rail-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.75rem 0.5rem;
+      border-radius: var(--md-sys-shape-corner-large);
+      color: var(--md-sys-color-on-surface-variant);
+      text-decoration: none;
+      font-size: 0.7rem;
+      font-weight: 500;
+      width: 64px;
+      transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+    }
+
+    .rail-item:hover {
+      background: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    @keyframes organicShimmer {
+      0% {
+        background-position: 0% 0%;
+        filter: hue-rotate(0deg) brightness(1) saturate(1);
+      }
+
+      12% {
+        background-position: 80% 20%;
+        filter: hue-rotate(8deg) brightness(1.15) saturate(1.1);
+      }
+
+      25% {
+        background-position: 40% 60%;
+        filter: hue-rotate(-5deg) brightness(1.05) saturate(0.95);
+      }
+
+      37% {
+        background-position: 90% 80%;
+        filter: hue-rotate(12deg) brightness(1.2) saturate(1.15);
+      }
+
+      50% {
+        background-position: 20% 90%;
+        filter: hue-rotate(-10deg) brightness(1.1) saturate(1);
+      }
+
+      62% {
+        background-position: 70% 40%;
+        filter: hue-rotate(5deg) brightness(1.18) saturate(1.08);
+      }
+
+      75% {
+        background-position: 10% 70%;
+        filter: hue-rotate(-8deg) brightness(1.02) saturate(0.92);
+      }
+
+      87% {
+        background-position: 60% 10%;
+        filter: hue-rotate(15deg) brightness(1.25) saturate(1.2);
+      }
+
+      100% {
+        background-position: 0% 0%;
+        filter: hue-rotate(0deg) brightness(1) saturate(1);
+      }
+    }
+
+    @keyframes organicGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 15px rgba(124, 77, 255, 0.25), 0 0 30px rgba(255, 157, 0, 0.15), inset 0 0 10px rgba(255, 255, 255, 0.05);
+      }
+
+      25% {
+        box-shadow: 0 0 20px rgba(255, 107, 0, 0.35), 0 0 40px rgba(124, 77, 255, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.08);
+      }
+
+      50% {
+        box-shadow: 0 0 25px rgba(255, 157, 0, 0.45), 0 0 50px rgba(124, 77, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+      }
+
+      75% {
+        box-shadow: 0 0 18px rgba(157, 107, 255, 0.3), 0 0 35px rgba(255, 107, 0, 0.25), inset 0 0 12px rgba(255, 255, 255, 0.06);
+      }
+    }
+
+    .rail-item.active {
+      background: linear-gradient(160deg, #7c4dff 0%, #a855f7 12%, #c084fc 20%, #ff9d00 35%, #ff6b00 45%, #ff4500 52%, #ff6b00 60%, #ff9d00 70%, #c084fc 82%, #a855f7 90%, #7c4dff 100%);
+      background-size: 500% 500%;
+      animation: organicShimmer 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite, organicGlow 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+      color: #fff;
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rail-item.active::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 75%, transparent 100%);
+      background-size: 300% 100%;
+      animation: lightSweep 6s ease-in-out infinite;
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    @keyframes lightSweep {
+
+      0%,
+      100% {
+        background-position: -100% 0;
+      }
+
+      50% {
+        background-position: 200% 0;
+      }
+    }
+
+    .rail-item.active:hover {
+      color: #fff;
+    }
+
+    .rail-item.active:hover svg {
+      fill: #fff;
+    }
+
+    .rail-item:hover {
+      color: #ff9d00;
+    }
+
+    .rail-item:hover svg {
+      fill: #ff9d00;
+    }
+
+    .rail-item.active svg {
+      fill: #fff;
+      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+    }
+
+    .rail-item svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+
+    .rail-icon-only {
+      position: relative;
+    }
+
+    .rail-icon-only .rail-tooltip {
+      position: absolute;
+      left: 70px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--md-sys-color-surface-container-highest);
+      color: var(--md-sys-color-on-surface);
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--md-sys-shape-corner-medium);
+      font-size: 0.8rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      box-shadow: var(--md-elevation-2);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      pointer-events: none;
+      z-index: 1001;
+    }
+
+    .rail-icon-only:hover .rail-tooltip {
+      opacity: 1;
+      visibility: visible;
+      left: 75px;
+    }
+
+    .rail-divider {
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #ff9d00, #ff6b00, transparent);
+      margin: 0.5rem 0;
+      border-radius: 1px;
+      box-shadow: 0 0 8px rgba(255, 157, 0, 0.4);
+    }
+
+    /* ===== Main content ===== */
+    .main {
+      margin-left: var(--rail-width);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      width: 100%;
+    }
+
+    /* ===== Page Header ===== */
+    .page-header {
+      padding: 2rem 0 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .page-header h1 {
+      font-size: 2.2rem;
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .page-header p {
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 1rem;
+    }
+
+    /* ===== Stats Overview ===== */
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--gap);
+      margin-bottom: 2rem;
+    }
+
+    .overview-card {
+      background: var(--md-sys-color-surface-container);
+      border-radius: var(--md-sys-shape-corner-large);
+      padding: 1.25rem;
+      text-align: center;
+      box-shadow: var(--md-elevation-1);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      transition: all var(--md-sys-motion-duration-medium);
+    }
+
+    .overview-card:hover {
+      box-shadow: var(--md-elevation-2);
+      transform: translateY(-2px);
+    }
+
+    .overview-card .stat-num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--md-sys-color-on-surface);
+      line-height: 1;
+    }
+
+    .overview-card .stat-label {
+      font-size: 0.75rem;
+      color: var(--md-sys-color-on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
+    /* ===== Section Cards ===== */
+    .section-card {
+      background: var(--md-sys-color-surface-container);
+      border-radius: var(--md-sys-shape-corner-extra-large);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--md-elevation-2);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .section-header h2 {
+      font-size: 1.25rem;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-header h2 svg {
+      width: 22px;
+      height: 22px;
+      fill: var(--md-sys-color-primary);
+    }
+
+    .count-badge {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--md-sys-shape-corner-full);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* ===== Table ===== */
+    .table-wrap {
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+      border-radius: var(--md-sys-shape-corner-medium);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    thead tr {
+      background: var(--md-sys-color-surface-container-high);
+    }
+
+    th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface-variant);
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      color: var(--md-sys-color-on-surface);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    tr:hover td {
+      background: var(--md-sys-color-surface-container-high);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Status badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--md-sys-shape-corner-full);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-success {
+      background: rgba(76, 175, 80, 0.15);
+      color: #4caf50;
+    }
+
+    .badge-warning {
+      background: rgba(255, 152, 0, 0.15);
+      color: #ff9800;
+    }
+
+    .badge-danger {
+      background: rgba(244, 67, 54, 0.15);
+      color: #f44336;
+    }
+
+    /* ===== Neon Glow Buttons ===== */
+    .btn-wrap {
+      position: relative;
+      padding: 3px;
+      background: linear-gradient(90deg, #ff9d00, #ff6b00, #ff4500);
+      border-radius: 0.9em;
+      transition: all 0.4s ease;
+      display: inline-flex;
+      cursor: pointer;
+    }
+
+    .btn-wrap::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      border-radius: 0.9em;
+      z-index: -1;
+      filter: blur(0);
+      transition: filter 0.4s ease;
+    }
+
+    .btn-wrap:hover::before {
+      background: linear-gradient(90deg, #ff9d00, #ff6b00, #ff4500);
+      filter: blur(1.2em);
+    }
+
+    .btn-wrap:active::before {
+      filter: blur(0.2em);
+    }
+
+    .btn-wrap .btn-inner {
+      font-size: 0.85rem;
+      padding: 0.5em 1.2em;
+      border-radius: 0.5em;
+      border: none;
+      background: linear-gradient(135deg, #ff9d00, #ff6b00);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.7);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+    }
+
+    .btn-wrap .btn-inner:hover {
+      background-color: #111;
+    }
+
+    .btn-wrap .btn-inner:active {
+      transform: scale(0.97);
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+      margin-top: auto;
+      padding: 1.5rem 0 2rem;
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--md-sys-color-on-surface-variant);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color var(--md-sys-motion-duration-short);
+    }
+
+    .footer-links a:hover {
+      color: var(--md-sys-color-primary);
+    }
+
+    .footer-links svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .footer-copy {
+      text-align: center;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 0.78rem;
+      margin-top: 1.5rem;
+      opacity: 0.6;
+    }
+
+    /* ===== Gradient text ===== */
+    .gradient-text {
+      background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary), #ff4500);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ===== Animations ===== */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .anim {
+      animation: fadeUp var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-decelerate) forwards;
+      opacity: 0;
+    }
+
+    .anim-d1 {
+      animation-delay: 50ms;
+    }
+
+    .anim-d2 {
+      animation-delay: 100ms;
+    }
+
+    .anim-d3 {
+      animation-delay: 150ms;
+    }
+
+    .anim-d4 {
+      animation-delay: 200ms;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      .rail {
+        width: 64px;
+      }
+
+      .rail-item span {
+        display: none;
+      }
+
+      .rail-item {
+        width: 48px;
+        padding: 0.75rem 0;
+      }
+
+      .main {
+        margin-left: 64px;
+      }
+
+      .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .rail {
+        display: none;
+      }
+
+      .main {
+        margin-left: 0;
+      }
+
+      .container {
+        padding: 0 1rem;
+      }
+
+      .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .table-wrap {
+        font-size: 0.75rem;
+      }
+
+      th,
+      td {
+        padding: 0.5rem;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">DreamCore</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/profile">Профиль</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/logout">Выйти</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container mt-4">
-        <h4 class="mb-4">Админ-панель</h4>
-
-        <div class="section">
-            <h6>Пользователи (<span th:text="${users.size()}">0</span>)</h6>
-            <div class="table-responsive">
-                <table class="table table-sm table-striped">
-                    <thead><tr><th>ID</th><th>TG ID</th><th>Username</th><th>Имя</th><th>Баланс</th><th>Дата рег.</th></tr></thead>
-                    <tbody>
-                        <tr th:each="u : ${users}">
-                            <td th:text="${u.id}"></td>
-                            <td th:text="${u.tgId}"></td>
-                            <td th:text="${u.username}"></td>
-                            <td th:text="${u.fullName}"></td>
-                            <td th:text="${u.balance}"></td>
-                            <td th:text="${u.createdAt}"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="section">
-            <h6>Ключи (<span th:text="${keys.size()}">0</span>)</h6>
-            <div class="table-responsive">
-                <table class="table table-sm table-striped">
-                    <thead><tr><th>ID</th><th>User ID</th><th>Email</th><th>Remark</th><th>Лимит (GB)</th><th>Истекает</th></tr></thead>
-                    <tbody>
-                        <tr th:each="k : ${keys}">
-                            <td th:text="${k.id}"></td>
-                            <td th:text="${k.userId}"></td>
-                            <td th:text="${k.xuiEmail}"></td>
-                            <td th:text="${k.remark}"></td>
-                            <td th:text="${k.trafficTotal > 0} ? ${#numbers.formatDecimal(k.trafficTotal / (1024*1024*1024.0), 1, 2)} : '∞'"></td>
-                            <td th:text="${k.expiryTs > 0} ? ${#dates.format(new java.util.Date(k.expiryTs), 'dd.MM.yyyy')} : 'Без срока'"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="section">
-            <h6>Платежи (<span th:text="${payments.size()}">0</span>)</h6>
-            <div class="table-responsive">
-                <table class="table table-sm table-striped">
-                    <thead><tr><th>ID</th><th>User ID</th><th>Сумма</th><th>Валюта</th><th>Статус</th><th>Дата</th></tr></thead>
-                    <tbody>
-                        <tr th:each="p : ${payments}">
-                            <td th:text="${p.id}"></td>
-                            <td th:text="${p.userId}"></td>
-                            <td th:text="${p.amount}"></td>
-                            <td th:text="${p.currency}"></td>
-                            <td><span class="badge" th:classappend="${p.status == 'completed'} ? 'bg-success' : 'bg-warning'" th:text="${p.status}"></span></td>
-                            <td th:text="${p.createdAt}"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- Rail Navigation -->
+  <nav class="rail">
+    <div class="rail-logo">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+      </svg>
     </div>
+
+    <a href="/" class="rail-item">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+      </svg>
+      <span>Главная</span>
+    </a>
+
+    <div class="rail-divider"></div>
+
+    <a href="/profile" class="rail-item">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+      </svg>
+      <span>Кабинет</span>
+    </a>
+
+    <a href="/admin" class="rail-item active">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+      </svg>
+      <span>Админ</span>
+    </a>
+
+    <a href="/logout" class="rail-item">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
+      </svg>
+      <span>Выйти</span>
+    </a>
+
+    <div class="rail-divider"></div>
+
+    <a href="return-policy.html" class="rail-item rail-icon-only" title="Политика возврата">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+      </svg>
+      <span class="rail-tooltip">Возврат</span>
+    </a>
+
+    <a href="offer.html" class="rail-item rail-icon-only" title="Оферта">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+      </svg>
+      <span class="rail-tooltip">Оферта</span>
+    </a>
+
+    <a href="privacy.html" class="rail-item rail-icon-only" title="Конфиденциальность">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+      </svg>
+      <span class="rail-tooltip">Конфиденциальность</span>
+    </a>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <div class="container page-content">
+      <div class="page-header anim">
+        <div>
+          <h1>Админ-<span class="gradient-text">панель</span></h1>
+          <p>Управление пользователями, ключами и платежами</p>
+        </div>
+        <div class="btn-wrap" onclick="window.location.reload()">
+          <button class="btn-inner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+            </svg>
+            Обновить
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Overview -->
+      <div class="stats-overview">
+        <div class="overview-card anim anim-d1">
+          <div class="stat-num" th:text="${users.size()}">0</div>
+          <div class="stat-label">Пользователей</div>
+        </div>
+        <div class="overview-card anim anim-d2">
+          <div class="stat-num" th:text="${keys.size()}">0</div>
+          <div class="stat-label">Ключей</div>
+        </div>
+        <div class="overview-card anim anim-d3">
+          <div class="stat-num" th:text="${payments.size()}">0</div>
+          <div class="stat-label">Платежей</div>
+        </div>
+        <div class="overview-card anim anim-d4">
+          <div class="stat-num" th:text="${users.size() > 0} ? ${users.size()} : '0'">0</div>
+          <div class="stat-label">Активных</div>
+        </div>
+      </div>
+
+      <!-- Users Section -->
+      <div class="section-card anim anim-d1">
+        <div class="section-header">
+          <h2>
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+            Пользователи
+          </h2>
+          <span class="count-badge" th:text="${users.size()}">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>TG ID</th>
+                <th>Username</th>
+                <th>Имя</th>
+                <th>Баланс</th>
+                <th>Дата рег.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="u : ${users}">
+                <td th:text="${u.id}"></td>
+                <td th:text="${u.tgId}"></td>
+                <td th:text="${u.username}"></td>
+                <td th:text="${u.fullName}"></td>
+                <td th:text="${u.balance} + ' ₽'"></td>
+                <td th:text="${u.createdAt}"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Keys Section -->
+      <div class="section-card anim anim-d2">
+        <div class="section-header">
+          <h2>
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" />
+            </svg>
+            Ключи
+          </h2>
+          <span class="count-badge" th:text="${keys.size()}">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User ID</th>
+                <th>Email</th>
+                <th>Remark</th>
+                <th>Лимит (GB)</th>
+                <th>Истекает</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="k : ${keys}">
+                <td th:text="${k.id}"></td>
+                <td th:text="${k.userId}"></td>
+                <td th:text="${k.xuiEmail}"></td>
+                <td th:text="${k.remark}"></td>
+                <td
+                  th:text="${k.trafficTotal > 0} ? ${#numbers.formatDecimal(k.trafficTotal / (1024*1024*1024.0), 1, 2)} : '∞'">
+                </td>
+                <td
+                  th:text="${k.expiryTs > 0} ? ${#dates.format(new java.util.Date(k.expiryTs), 'dd.MM.yyyy')} : 'Без срока'">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Payments Section -->
+      <div class="section-card anim anim-d3">
+        <div class="section-header">
+          <h2>
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+            </svg>
+            Платежи
+          </h2>
+          <span class="count-badge" th:text="${payments.size()}">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User ID</th>
+                <th>Сумма</th>
+                <th>Валюта</th>
+                <th>Статус</th>
+                <th>Дата</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="p : ${payments}">
+                <td th:text="${p.id}"></td>
+                <td th:text="${p.userId}"></td>
+                <td th:text="${p.amount}"></td>
+                <td th:text="${p.currency}"></td>
+                <td>
+                  <span class="badge" th:classappend="${p.status == 'completed'} ? 'badge-success' : 'badge-warning'"
+                    th:text="${p.status}"></span>
+                </td>
+                <td th:text="${p.createdAt}"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-inner">
+          <a href="/"
+            style="font-size:1.1rem; text-decoration:none; color:var(--md-sys-color-on-surface); display:flex; align-items:center; gap:0.5rem; font-weight:700;">
+            <div class="rail-logo" style="margin:0; width:28px; height:28px;">
+              <svg viewBox="0 0 24 24" style="width:16px; height:16px;">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+              </svg>
+            </div>
+            DreamCore
+          </a>
+          <div class="footer-links">
+            <a href="return-policy.html">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+              </svg>
+              Политика возврата
+            </a>
+            <a href="offer.html">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+              </svg>
+              Оферта
+            </a>
+            <a href="privacy.html">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+              </svg>
+              Конфиденциальность
+            </a>
+          </div>
+        </div>
+        <div class="footer-copy">© 2026 DreamCore. Воплощаем цифровые мечты.</div>
+      </div>
+    </footer>
+
+  </div>
+
 </body>
+
 </html>

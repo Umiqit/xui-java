@@ -353,12 +353,29 @@ body {
 }
 
 .hero-visual::after {
-  content: '';
+  display: none;
+}
+
+.hero-logo {
   position: absolute;
-  inset: 20%;
-  border: 2px solid rgba(255,255,255,0.2);
-  border-radius: var(--md-sys-shape-corner-large);
-  transform: rotate(-5deg);
+  inset: 5%;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  transform: rotate(-17deg);
+}
+
+.hero-logo img {
+  width: 120%;
+  height: 120%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));
+  animation: logoFloat 6s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.02); }
 }
 
 
@@ -677,6 +694,7 @@ body {
 }
 
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -762,7 +780,11 @@ body {
             </div>
           </div>
         </div>
-        <div class="hero-visual anim anim-d1"></div>
+        <div class="hero-visual anim anim-d1">
+          <div class="hero-logo">
+            <img src="icons/DreamCore.svg" alt="DreamCore Logo">
+          </div>
+        </div>
       </div>
     </div>
   </section>
