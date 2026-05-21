@@ -18,9 +18,12 @@ public class Menus {
         r1.add(new KeyboardButton("👤 Профиль"));
         r1.add(new KeyboardButton("🔑 Мои ключи"));
         KeyboardRow r2 = new KeyboardRow();
-        r2.add(new KeyboardButton("💳 Пополнить"));
-        r2.add(new KeyboardButton("📊 Статистика"));
-        ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2));
+        r2.add(new KeyboardButton("🛒 Купить ключ"));
+        r2.add(new KeyboardButton("💰 Баланс"));
+        KeyboardRow r3 = new KeyboardRow();
+        r3.add(new KeyboardButton("💳 Пополнить"));
+        r3.add(new KeyboardButton("📊 Статистика"));
+        ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2, r3));
         kb.setResizeKeyboard(true);
         return kb;
     }
@@ -30,11 +33,14 @@ public class Menus {
         r1.add(new KeyboardButton("👤 Профиль"));
         r1.add(new KeyboardButton("🔑 Мои ключи"));
         KeyboardRow r2 = new KeyboardRow();
-        r2.add(new KeyboardButton("💳 Пополнить"));
-        r2.add(new KeyboardButton("📊 Статистика"));
+        r2.add(new KeyboardButton("🛒 Купить ключ"));
+        r2.add(new KeyboardButton("💰 Баланс"));
         KeyboardRow r3 = new KeyboardRow();
-        r3.add(new KeyboardButton("⚙️ Админка"));
-        ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2, r3));
+        r3.add(new KeyboardButton("💳 Пополнить"));
+        r3.add(new KeyboardButton("📊 Статистика"));
+        KeyboardRow r4 = new KeyboardRow();
+        r4.add(new KeyboardButton("⚙️ Админка"));
+        ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2, r3, r4));
         kb.setResizeKeyboard(true);
         return kb;
     }
@@ -95,5 +101,28 @@ public class Menus {
                     .callbackData("admin_inbound:" + id).build()));
         }
         return new InlineKeyboardMarkup(rows);
+    }
+
+    public static InlineKeyboardMarkup buyInboundsKeyboard(List<com.fasterxml.jackson.databind.JsonNode> inbounds) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (com.fasterxml.jackson.databind.JsonNode ib : inbounds) {
+            int id = ib.path("id").asInt();
+            String remark = ib.path("remark").asText(String.valueOf(id));
+            rows.add(List.of(InlineKeyboardButton.builder()
+                    .text("📡 " + remark)
+                    .callbackData("buy_inbound:" + id).build()));
+        }
+        return new InlineKeyboardMarkup(rows);
+    }
+
+    public static InlineKeyboardMarkup buyPlansKeyboard(int inboundId) {
+        return new InlineKeyboardMarkup(List.of(
+                List.of(InlineKeyboardButton.builder()
+                        .text(String.format(bot.util.Messages.BUY_KEY_PLAN_1, bot.handler.BuyKeyHandler.PLAN_1_PRICE))
+                        .callbackData("buy_plan:" + inboundId + ":1").build()),
+                List.of(InlineKeyboardButton.builder()
+                        .text(String.format(bot.util.Messages.BUY_KEY_PLAN_2, bot.handler.BuyKeyHandler.PLAN_2_PRICE))
+                        .callbackData("buy_plan:" + inboundId + ":2").build())
+        ));
     }
 }

@@ -9,6 +9,8 @@ C:\Users\truni\projects\xui-java\src\main\java\bot\db\model\Key.java
 C:\Users\truni\projects\xui-java\src\main\java\bot\db\model\Payment.java
 C:\Users\truni\projects\xui-java\src\main\java\bot\db\model\User.java
 C:\Users\truni\projects\xui-java\src\main\java\bot\handler\AdminHandler.java
+C:\Users\truni\projects\xui-java\src\main\java\bot\handler\BalanceHandler.java
+C:\Users\truni\projects\xui-java\src\main\java\bot\handler\BuyKeyHandler.java
 C:\Users\truni\projects\xui-java\src\main\java\bot\handler\KeysHandler.java
 C:\Users\truni\projects\xui-java\src\main\java\bot\handler\PaymentHandler.java
 C:\Users\truni\projects\xui-java\src\main\java\bot\handler\ProfileHandler.java

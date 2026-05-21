@@ -5,6 +5,7 @@ bot\keyboard\Menus.class
 bot\service\KeyService.class
 bot\service\XuiClient$1.class
 bot\db\dao\UserDao.class
+bot\handler\BalanceHandler.class
 bot\handler\ProfileHandler.class
 bot\middleware\RegisterMiddleware.class
 bot\service\AdminService.class
@@ -26,4 +27,5 @@ bot\handler\AdminHandler.class
 bot\service\XuiClient$AddResult.class
 bot\db\dao\AdminSessionDao.class
 bot\handler\AdminHandler$State.class
+bot\handler\BuyKeyHandler.class
 bot\handler\StartHandler.class
