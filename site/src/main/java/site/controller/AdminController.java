@@ -47,7 +47,10 @@ public class AdminController {
         return tgId != null && getAdminIds().contains(tgId);
     }
 
-    @GetMapping("/admin")
+    @Value("${admin.panel-path}")
+    private String adminPath;
+
+    @GetMapping("${admin.panel-path}")
     public String admin(HttpSession session, Model model) {
         Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
