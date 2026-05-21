@@ -1,44 +1,481 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход — DreamCore</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background: #f8f9fa; }
-        .login-box { max-width: 400px; margin: 80px auto; padding: 30px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вход — DreamCore</title>
+<style>
+:root {
+  --md-sys-color-primary: #ff9d00;
+  --md-sys-color-on-primary: #0a0a0a;
+  --md-sys-color-primary-container: rgba(255,157,0,0.12);
+  --md-sys-color-on-primary-container: #ff9d00;
+  --md-sys-color-secondary: #ff6b00;
+  --md-sys-color-surface: #141416;
+  --md-sys-color-surface-dim: #0f0f11;
+  --md-sys-color-surface-bright: #1c1c1f;
+  --md-sys-color-surface-container-lowest: #0a0a0c;
+  --md-sys-color-surface-container-low: #111113;
+  --md-sys-color-surface-container: #18181a;
+  --md-sys-color-surface-container-high: #1e1e21;
+  --md-sys-color-surface-container-highest: #252528;
+  --md-sys-color-on-surface: #f0f0f5;
+  --md-sys-color-on-surface-variant: #8a8a95;
+  --md-sys-color-outline: rgba(255,157,0,0.15);
+  --md-sys-color-outline-variant: rgba(255,157,0,0.08);
+  --md-elevation-1: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.24);
+  --md-elevation-2: 0 3px 6px rgba(0,0,0,0.32), 0 2px 4px rgba(0,0,0,0.24);
+  --md-elevation-3: 0 6px 12px rgba(0,0,0,0.35), 0 4px 8px rgba(0,0,0,0.28);
+  --md-elevation-4: 0 8px 16px rgba(0,0,0,0.38), 0 6px 12px rgba(0,0,0,0.30);
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 50%;
+  --md-sys-motion-easing-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --md-sys-motion-easing-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --md-sys-motion-duration-short: 150ms;
+  --md-sys-motion-duration-medium: 250ms;
+  --md-sys-motion-duration-long: 350ms;
+  --rail-width: 80px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--md-sys-color-surface-dim);
+  color: var(--md-sys-color-on-surface);
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--md-sys-color-surface-dim); }
+::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--md-sys-color-primary); }
+
+/* ===== Rail Navigation ===== */
+.rail {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--rail-width);
+  background: var(--md-sys-color-surface-container);
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  z-index: 1000;
+  gap: 0.5rem;
+}
+
+.rail-logo {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+  border-radius: var(--md-sys-shape-corner-medium);
+  display: grid; place-items: center;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--md-elevation-1);
+}
+
+.rail-logo svg { width: 22px; height: 22px; fill: var(--md-sys-color-on-primary); }
+
+.rail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--md-sys-shape-corner-large);
+  color: var(--md-sys-color-on-surface-variant);
+  text-decoration: none;
+  font-size: 0.7rem;
+  font-weight: 500;
+  width: 64px;
+  transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.rail-item:hover {
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+}
+
+@keyframes organicShimmer {
+  0% { background-position: 0% 0%; filter: hue-rotate(0deg) brightness(1) saturate(1); }
+  12% { background-position: 80% 20%; filter: hue-rotate(8deg) brightness(1.15) saturate(1.1); }
+  25% { background-position: 40% 60%; filter: hue-rotate(-5deg) brightness(1.05) saturate(0.95); }
+  37% { background-position: 90% 80%; filter: hue-rotate(12deg) brightness(1.2) saturate(1.15); }
+  50% { background-position: 20% 90%; filter: hue-rotate(-10deg) brightness(1.1) saturate(1); }
+  62% { background-position: 70% 40%; filter: hue-rotate(5deg) brightness(1.18) saturate(1.08); }
+  75% { background-position: 10% 70%; filter: hue-rotate(-8deg) brightness(1.02) saturate(0.92); }
+  87% { background-position: 60% 10%; filter: hue-rotate(15deg) brightness(1.25) saturate(1.2); }
+  100% { background-position: 0% 0%; filter: hue-rotate(0deg) brightness(1) saturate(1); }
+}
+
+@keyframes organicGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(124,77,255,0.25), 0 0 30px rgba(255,157,0,0.15), inset 0 0 10px rgba(255,255,255,0.05); }
+  25% { box-shadow: 0 0 20px rgba(255,107,0,0.35), 0 0 40px rgba(124,77,255,0.2), inset 0 0 15px rgba(255,255,255,0.08); }
+  50% { box-shadow: 0 0 25px rgba(255,157,0,0.45), 0 0 50px rgba(124,77,255,0.3), inset 0 0 20px rgba(255,255,255,0.1); }
+  75% { box-shadow: 0 0 18px rgba(157,107,255,0.3), 0 0 35px rgba(255,107,0,0.25), inset 0 0 12px rgba(255,255,255,0.06); }
+}
+
+.rail-item.active {
+  background: linear-gradient(160deg, #7c4dff 0%, #a855f7 12%, #c084fc 20%, #ff9d00 35%, #ff6b00 45%, #ff4500 52%, #ff6b00 60%, #ff9d00 70%, #c084fc 82%, #a855f7 90%, #7c4dff 100%);
+  background-size: 500% 500%;
+  animation: organicShimmer 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite, organicGlow 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  color: #fff;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.rail-item.active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 75%, transparent 100%);
+  background-size: 300% 100%;
+  animation: lightSweep 6s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@keyframes lightSweep {
+  0%, 100% { background-position: -100% 0; }
+  50% { background-position: 200% 0; }
+}
+
+.rail-item.active:hover { color: #fff; }
+.rail-item.active:hover svg { fill: #fff; }
+.rail-item:hover { color: #ff9d00; }
+.rail-item:hover svg { fill: #ff9d00; }
+.rail-item.active svg { fill: #fff; filter: drop-shadow(0 0 6px rgba(255,255,255,0.8)); }
+.rail-item svg { width: 24px; height: 24px; fill: currentColor; }
+
+.rail-icon-only { position: relative; }
+
+.rail-icon-only .rail-tooltip {
+  position: absolute;
+  left: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--md-sys-shape-corner-medium);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  box-shadow: var(--md-elevation-2);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.rail-icon-only:hover .rail-tooltip {
+  opacity: 1;
+  visibility: visible;
+  left: 75px;
+}
+
+.rail-divider {
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff9d00, #ff6b00, transparent);
+  margin: 0.5rem 0;
+  border-radius: 1px;
+  box-shadow: 0 0 8px rgba(255, 157, 0, 0.4);
+}
+
+/* ===== Main content ===== */
+.main {
+  margin-left: var(--rail-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ===== Login Card ===== */
+.login-card {
+  background: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  padding: 3rem;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--md-elevation-3);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+}
+
+.login-logo {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+  border-radius: var(--md-sys-shape-corner-large);
+  display: grid; place-items: center;
+  margin: 0 auto 1.5rem;
+  box-shadow: var(--md-elevation-2);
+}
+
+.login-logo svg { width: 30px; height: 30px; fill: var(--md-sys-color-on-primary); }
+
+.login-card h1 {
+  font-size: 1.75rem;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.login-card .subtitle {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+/* ===== Neon Glow Buttons ===== */
+.btn-wrap {
+  position: relative;
+  padding: 3px;
+  background: linear-gradient(90deg, #ff9d00, #ff6b00, #ff4500);
+  border-radius: 0.9em;
+  transition: all 0.4s ease;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.btn-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 0.9em;
+  z-index: -1;
+  filter: blur(0);
+  transition: filter 0.4s ease;
+}
+
+.btn-wrap:hover::before {
+  background: linear-gradient(90deg, #ff9d00, #ff6b00, #ff4500);
+  filter: blur(1.2em);
+}
+
+.btn-wrap:active::before {
+  filter: blur(0.2em);
+}
+
+.btn-wrap .btn-inner {
+  font-size: 0.95rem;
+  padding: 0.65em 1.4em;
+  border-radius: 0.5em;
+  border: none;
+  background: linear-gradient(135deg, #ff9d00, #ff6b00);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 2px 2px 3px rgba(0,0,0,0.7);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn-wrap .btn-inner:hover {
+  background-color: #111;
+}
+
+.btn-wrap .btn-inner:active {
+  transform: scale(0.97);
+}
+
+.btn-wrap-lg {
+  padding: 4px;
+  border-radius: 1em;
+}
+
+.btn-wrap-lg::before { border-radius: 1em; }
+.btn-wrap-lg .btn-inner {
+  font-size: 1.1rem;
+  padding: 0.8em 2em;
+  border-radius: 0.6em;
+}
+
+/* Telegram widget container */
+.telegram-widget {
+  margin: 1.5rem 0;
+  min-height: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+}
+
+/* Info text */
+.info-text {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8rem;
+  margin-top: 1.5rem;
+  line-height: 1.6;
+}
+
+.info-text a {
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+}
+
+.info-text a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Gradient text ===== */
+.gradient-text {
+  background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary), #ff4500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.anim {
+  animation: fadeUp var(--md-sys-motion-duration-long) var(--md-sys-motion-easing-decelerate) forwards;
+  opacity: 0;
+}
+
+.anim-d1 { animation-delay: 50ms; }
+.anim-d2 { animation-delay: 100ms; }
+.anim-d3 { animation-delay: 150ms; }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .rail { width: 64px; }
+  .rail-item span { display: none; }
+  .rail-item { width: 48px; padding: 0.75rem 0; }
+  .main { margin-left: 64px; }
+}
+
+@media (max-width: 600px) {
+  .rail { display: none; }
+  .main { margin-left: 0; padding: 1rem; }
+  .login-card { padding: 2rem 1.5rem; }
+}
+</style>
 </head>
 <body>
-    <div class="login-box">
-        <h3 class="mb-4">Личный кабинет</h3>
-        <p class="text-muted mb-4">Войдите через Telegram, чтобы управлять своими ключами.</p>
-        <div id="telegram-login"></div>
+
+<!-- Rail Navigation -->
+<nav class="rail">
+  <div class="rail-logo">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+  </div>
+
+  <a href="/" class="rail-item">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    <span>Главная</span>
+  </a>
+
+  <div class="rail-divider"></div>
+
+  <a href="/login" class="rail-item active">
+    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    <span>Кабинет</span>
+  </a>
+</nav>
+
+<!-- Main Content -->
+<div class="main">
+  <div class="login-card anim">
+    <div class="login-logo anim anim-d1">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    </div>
+    <h1 class="anim anim-d1">Личный <span class="gradient-text">кабинет</span></h1>
+    <p class="subtitle anim anim-d2">Войдите через Telegram, чтобы управлять своими ключами и балансом.</p>
+
+    <div class="telegram-widget anim anim-d2" id="telegram-login"></div>
+
+    <div class="divider anim anim-d3">или</div>
+
+    <div class="btn-wrap btn-wrap-lg anim anim-d3" onclick="window.location.href='/'">
+      <button class="btn-inner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Вернуться на главную
+      </button>
     </div>
 
-    <script>
-        function onTelegramAuth(user) {
-            fetch('/auth/telegram', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            })
-            .then(r => {
-                if (r.ok) {
-                    window.location.href = '/profile';
-                } else {
-                    alert('Ошибка авторизации. Попробуйте ещё раз.');
-                }
-            })
-            .catch(() => alert('Ошибка соединения.'));
+    <p class="info-text anim anim-d3">
+      Авторизуясь, вы соглашаетесь с <a href="offer.html">офертой</a> и <a href="privacy.html">политикой конфиденциальности</a>.
+    </p>
+  </div>
+</div>
+
+<script>
+function onTelegramAuth(user) {
+    fetch('/auth/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+    })
+    .then(r => {
+        if (r.ok) {
+            window.location.href = '/profile';
+        } else {
+            alert('Ошибка авторизации. Попробуйте ещё раз.');
         }
-    </script>
-    <script async src="https://telegram.org/js/telegram-widget.js?22"
-            th:attr="data-telegram-login=${botUsername}"
-            data-size="large"
-            data-onauth="onTelegramAuth(user)"
-            data-request-access="write">
-    </script>
+    })
+    .catch(() => alert('Ошибка соединения.'));
+}
+</script>
+<script async src="https://telegram.org/js/telegram-widget.js?22"
+        th:attr="data-telegram-login=${botUsername}"
+        data-size="large"
+        data-onauth="onTelegramAuth(user)"
+        data-request-access="write">
+</script>
+
 </body>
 </html>
