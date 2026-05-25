@@ -734,6 +734,46 @@
   xhr.send();
 })();
 </script>
+<script>
+(function enhanceAdminRail(){
+  function addAdminItems(){
+    var rail = document.querySelector('.rail');
+    if(!rail) return;
+    var cabinet = rail.querySelector('a[href="/profile"]');
+    if(!cabinet) return;
+    if(rail.querySelector('.admin-rail-item')) return;
+
+    var divider = document.createElement('div');
+    divider.className = 'rail-divider';
+
+    var adminBtn = document.createElement('button');
+    adminBtn.className = 'rail-item admin-rail-item active';
+    adminBtn.style.pointerEvents = 'none';
+    adminBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg><span>Админ-панель</span>';
+
+    var ticketsBtn = document.createElement('a');
+    ticketsBtn.className = 'rail-item admin-rail-item';
+    ticketsBtn.href = '/admin-tickets.html';
+    ticketsBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/></svg><span>Тикеты</span>';
+
+    rail.insertBefore(divider, cabinet);
+    rail.insertBefore(adminBtn, cabinet);
+    rail.insertBefore(ticketsBtn, cabinet);
+  }
+
+  if(document.querySelector('.rail')){
+    addAdminItems();
+  } else {
+    var obs = new MutationObserver(function(mutations){
+      if(document.querySelector('.rail')){
+        addAdminItems();
+        obs.disconnect();
+      }
+    });
+    obs.observe(document.body, {childList:true, subtree:true});
+  }
+})();
+</script>
 
   <!-- Main Content -->
   <div class="main">
