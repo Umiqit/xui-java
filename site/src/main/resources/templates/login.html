@@ -383,7 +383,10 @@ body {
     <h1 class="anim anim-d1">Личный <span class="gradient-text">кабинет</span></h1>
     <p class="subtitle anim anim-d2">Войдите через Telegram, чтобы управлять своими ключами и балансом.</p>
 
-    <div class="telegram-widget anim anim-d2" id="telegram-login"></div>
+    <div th:if="${botUsername == null or botUsername.isBlank()}" class="anim anim-d2" style="color:#f44336; background:rgba(244,67,54,0.15); padding:1rem; border-radius:12px; font-weight:500; margin:1rem 0;">
+      Ошибка: имя бота не настроено. Проверьте переменную <code>BOT_USERNAME</code> в файле <code>.env</code> и перезапустите контейнер сайта.
+    </div>
+    <div th:unless="${botUsername == null or botUsername.isBlank()}" class="telegram-widget anim anim-d2" id="telegram-login"></div>
 
     <div class="divider anim anim-d3">или</div>
 
@@ -417,11 +420,26 @@ function onTelegramAuth(user) {
     .catch(() => alert('Ошибка соединения.'));
 }
 </script>
-<script async src="https://telegram.org/js/telegram-widget.js?22"
-        th:attr="data-telegram-login=${botUsername}"
+<script th:unless="${botUsername == null or botUsername.isBlank()}" async src="https://telegram.org/js/telegram-widget.js?22"
+        th:data-telegram-login="${botUsername}"
         data-size="large"
         data-onauth="onTelegramAuth(user)"
         data-request-access="write">
+</script>
+<script th:inline="javascript" th:unless="${botUsername == null or botUsername.isBlank()}">
+(function checkTelegramWidget(){
+  var botUsername = /*[[${botUsername}]]*/ '';
+  setTimeout(function(){
+    var widget = document.querySelector('iframe[id^="telegram-login"]');
+    var container = document.getElementById('telegram-login');
+    if (!widget && container) {
+      container.innerHTML = '<div style="color:var(--md-sys-color-on-surface-variant); font-size:0.85rem; padding:0.5rem;">' +
+        'Если кнопка Telegram не появилась, убедитесь, что домен <strong>dreamchatai.website</strong> добавлен в настройках бота через @BotFather (раздел <em>Bot Settings → Domain</em>).<br><br>' +
+        'Или напишите боту: <a href="https://t.me/' + botUsername + '" style="color:var(--md-sys-color-primary);" target="_blank">@' + botUsername + '</a>' +
+        '</div>';
+    }
+  }, 3000);
+})();
 </script>
 
 </body>
