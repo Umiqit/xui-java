@@ -133,127 +133,6 @@
       color: var(--md-sys-color-on-surface);
     }
 
-    @keyframes organicShimmer {
-      0% {
-        background-position: 0% 0%;
-        filter: hue-rotate(0deg) brightness(1) saturate(1);
-      }
-
-      12% {
-        background-position: 80% 20%;
-        filter: hue-rotate(8deg) brightness(1.15) saturate(1.1);
-      }
-
-      25% {
-        background-position: 40% 60%;
-        filter: hue-rotate(-5deg) brightness(1.05) saturate(0.95);
-      }
-
-      37% {
-        background-position: 90% 80%;
-        filter: hue-rotate(12deg) brightness(1.2) saturate(1.15);
-      }
-
-      50% {
-        background-position: 20% 90%;
-        filter: hue-rotate(-10deg) brightness(1.1) saturate(1);
-      }
-
-      62% {
-        background-position: 70% 40%;
-        filter: hue-rotate(5deg) brightness(1.18) saturate(1.08);
-      }
-
-      75% {
-        background-position: 10% 70%;
-        filter: hue-rotate(-8deg) brightness(1.02) saturate(0.92);
-      }
-
-      87% {
-        background-position: 60% 10%;
-        filter: hue-rotate(15deg) brightness(1.25) saturate(1.2);
-      }
-
-      100% {
-        background-position: 0% 0%;
-        filter: hue-rotate(0deg) brightness(1) saturate(1);
-      }
-    }
-
-    @keyframes organicGlow {
-
-      0%,
-      100% {
-        box-shadow: 0 0 15px rgba(124, 77, 255, 0.25), 0 0 30px rgba(255, 157, 0, 0.15), inset 0 0 10px rgba(255, 255, 255, 0.05);
-      }
-
-      25% {
-        box-shadow: 0 0 20px rgba(255, 107, 0, 0.35), 0 0 40px rgba(124, 77, 255, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.08);
-      }
-
-      50% {
-        box-shadow: 0 0 25px rgba(255, 157, 0, 0.45), 0 0 50px rgba(124, 77, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
-      }
-
-      75% {
-        box-shadow: 0 0 18px rgba(157, 107, 255, 0.3), 0 0 35px rgba(255, 107, 0, 0.25), inset 0 0 12px rgba(255, 255, 255, 0.06);
-      }
-    }
-
-    .rail-item.active {
-      background: linear-gradient(160deg, #7c4dff 0%, #a855f7 12%, #c084fc 20%, #ff9d00 35%, #ff6b00 45%, #ff4500 52%, #ff6b00 60%, #ff9d00 70%, #c084fc 82%, #a855f7 90%, #7c4dff 100%);
-      background-size: 500% 500%;
-      animation: organicShimmer 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite, organicGlow 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-      color: #fff;
-      border: none;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .rail-item.active::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 75%, transparent 100%);
-      background-size: 300% 100%;
-      animation: lightSweep 6s ease-in-out infinite;
-      pointer-events: none;
-      border-radius: inherit;
-    }
-
-    @keyframes lightSweep {
-
-      0%,
-      100% {
-        background-position: -100% 0;
-      }
-
-      50% {
-        background-position: 200% 0;
-      }
-    }
-
-    .rail-item.active:hover {
-      color: #fff;
-    }
-
-    .rail-item.active:hover svg {
-      fill: #fff;
-    }
-
-    .rail-item:hover {
-      color: #ff9d00;
-    }
-
-    .rail-item:hover svg {
-      fill: #ff9d00;
-    }
-
-    .rail-item.active svg {
-      fill: #fff;
-      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
-    }
-
     .rail-item svg {
       width: 24px;
       height: 24px;
@@ -734,24 +613,78 @@
   xhr.send();
 })();
 </script>
+<script>
+(function enhanceAdminRail(){
+  function addAdminItems(){
+    var rail = document.querySelector('.rail');
+    if(!rail) return;
+    var cabinet = rail.querySelector('a[href="/profile"]');
+    if(!cabinet) return;
+    if(rail.querySelector('.admin-rail-item')) return;
+
+    var divider = document.createElement('div');
+    divider.className = 'rail-divider';
+
+    var adminBtn = document.createElement('button');
+    adminBtn.className = 'rail-item admin-rail-item active';
+    adminBtn.style.pointerEvents = 'none';
+    adminBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg><span>Админ-панель</span>';
+
+    var ticketsBtn = document.createElement('a');
+    ticketsBtn.className = 'rail-item admin-rail-item';
+    ticketsBtn.href = '/admin-tickets.html';
+    ticketsBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/></svg><span>Тикеты</span>';
+
+    rail.insertBefore(divider, cabinet);
+    rail.insertBefore(adminBtn, cabinet);
+    rail.insertBefore(ticketsBtn, cabinet);
+  }
+
+  if(document.querySelector('.rail')){
+    addAdminItems();
+  } else {
+    var obs = new MutationObserver(function(mutations){
+      if(document.querySelector('.rail')){
+        addAdminItems();
+        obs.disconnect();
+      }
+    });
+    obs.observe(document.body, {childList:true, subtree:true});
+  }
+})();
+</script>
 
   <!-- Main Content -->
   <div class="main">
 
     <div class="container page-content">
+      <div th:if="${message}" class="anim" style="margin-top:1.5rem; background:rgba(76,175,80,0.15); color:#4caf50; padding:1rem 1.25rem; border-radius:12px; font-weight:500;" th:text="${message}"></div>
+      <div th:if="${error}" class="anim" style="margin-top:1.5rem; background:rgba(244,67,54,0.15); color:#f44336; padding:1rem 1.25rem; border-radius:12px; font-weight:500;" th:text="${error}"></div>
       <div class="page-header anim">
         <div>
           <h1>Админ-<span class="gradient-text">панель</span></h1>
           <p>Управление пользователями, ключами и платежами</p>
         </div>
-        <div class="btn-wrap" onclick="window.location.reload()">
-          <button class="btn-inner">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
-            </svg>
-            Обновить
-          </button>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <div class="btn-wrap" onclick="window.location.reload()">
+            <button class="btn-inner">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+              </svg>
+              Обновить
+            </button>
+          </div>
+          <form th:action="@{${adminPath} + '/db-repair'}" method="post" style="display:inline;">
+            <div class="btn-wrap" onclick="this.closest('form').submit()" style="cursor:pointer;">
+              <button type="submit" class="btn-inner">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84a.484.484 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.27.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                </svg>
+                Починить БД
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
