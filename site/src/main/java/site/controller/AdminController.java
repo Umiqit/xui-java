@@ -69,4 +69,16 @@ public class AdminController {
         model.addAttribute("payments", payments);
         return "admin";
     }
+
+    @GetMapping("/admin/tickets")
+    public String adminTickets(HttpSession session) {
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/login";
+        }
+        if (!isAdmin(session)) {
+            return "redirect:/profile";
+        }
+        return "admin-tickets";
+    }
 }

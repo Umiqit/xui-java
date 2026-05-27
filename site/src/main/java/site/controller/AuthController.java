@@ -27,7 +27,11 @@ public class AuthController {
     private String botUsername;
 
     @GetMapping("/login")
-    public String loginPage(Model model) {
+    public String loginPage(Model model, HttpSession session) {
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId != null) {
+            return "redirect:/profile";
+        }
         model.addAttribute("botUsername", botUsername);
         return "login";
     }
