@@ -105,8 +105,8 @@ prompt_secret() {
 
 generate_env() {
     local env_file="$INSTALL_DIR/.env"
-    if [ -f "$env_file" ]; then
-        warn ".env already exists, keeping existing file"
+    if [ -f "$env_file" ] && grep -q '^BOT_TOKEN=' "$env_file" && grep -q '^DB_PASSWORD=' "$env_file"; then
+        warn ".env already exists and looks complete, keeping existing file"
         return
     fi
 
@@ -353,6 +353,11 @@ do_bot_logs() {
     docker compose logs -f --tail=100 bot
 }
 
+do_db_logs() {
+    cd "$INSTALL_DIR"
+    docker compose logs -f --tail=100 db
+}
+
 do_bot_update() {
     check_root
     cd "$INSTALL_DIR"
@@ -429,6 +434,10 @@ case "${1:-}" in
     bot-update)
         do_bot_update
         ;;
+    db-logs)
+        shift
+        do_db_logs "$@"
+        ;;
     *)
         echo "Usage: $0 <command>"
         echo ""
@@ -457,6 +466,9 @@ case "${1:-}" in
         echo "  bot-status    - Show bot container status"
         echo "  bot-logs      - Show bot logs"
         echo "  bot-update    - Rebuild and update bot container"
+        echo ""
+        echo "Database:"
+        echo "  db-logs       - Show database logs"
         exit 1
         ;;
 esac
