@@ -242,12 +242,10 @@ do_logs() {
 
 do_update() {
     check_root
-    cd "$INSTALL_DIR"
     info "Updating..."
+    copy_project
+    cd "$INSTALL_DIR"
     docker compose down
-    if [ -d ".git" ]; then
-        git pull || warn "Git pull failed, continuing with local files"
-    fi
     docker compose up -d --build
     ok "Updated"
 }
@@ -308,8 +306,9 @@ do_site_logs() {
 
 do_site_update() {
     check_root
-    cd "$INSTALL_DIR"
     info "Updating site..."
+    copy_project
+    cd "$INSTALL_DIR"
     docker compose stop site
     docker compose rm -f site 2>/dev/null || true
     docker compose build --no-cache site
@@ -360,8 +359,9 @@ do_db_logs() {
 
 do_bot_update() {
     check_root
-    cd "$INSTALL_DIR"
     info "Updating bot..."
+    copy_project
+    cd "$INSTALL_DIR"
     docker compose stop bot
     docker compose rm -f bot 2>/dev/null || true
     docker compose build --no-cache bot
