@@ -6,12 +6,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import site.entity.Key;
 import site.entity.Payment;
 import site.entity.User;
 import site.repository.KeyRepository;
 import site.repository.PaymentRepository;
 import site.repository.UserRepository;
+import site.service.DatabaseRepairService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,8 +37,13 @@ public class AdminController {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @Autowired
+    private DatabaseRepairService dbRepairService;
+
     private Set<Long> getAdminIds() {
-        if (adminIdsRaw == null || adminIdsRaw.isBlank()) return Set.of();
+        if (adminIdsRaw == null || adminIdsRaw.isBlank()) {
+            return Set.of();
+        }
         return Arrays.stream(adminIdsRaw.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
@@ -49,6 +58,11 @@ public class AdminController {
 
     @Value("${admin.panel-path}")
     private String adminPath;
+
+    @ModelAttribute("adminPath")
+    public String getAdminPath() {
+        return adminPath;
+    }
 
     @GetMapping("${admin.panel-path}")
     public String admin(HttpSession session, Model model) {
@@ -70,15 +84,17 @@ public class AdminController {
         return "admin";
     }
 
-    @GetMapping("/admin/tickets")
-    public String adminTickets(HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
-            return "redirect:/login";
-        }
+    @PostMapping("${admin.panel-path}/db-repair")
+    public String dbRepair(HttpSession session, RedirectAttributes ra) {
         if (!isAdmin(session)) {
             return "redirect:/profile";
         }
-        return "admin-tickets";
+        try {
+            dbRepairService.repair();
+            ra.addFlashAttribute("message", "Таблицы БД успешно обновлены!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Ошибка обновления таблиц: " + e.getMessage());
+        }
+        return "redirect:" + adminPath;
     }
 }
