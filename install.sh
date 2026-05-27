@@ -157,7 +157,7 @@ copy_project() {
 
     # If running from git repo, copy all files. Otherwise clone.
     if [ -d "$SCRIPT_DIR/.git" ] || [ -f "$SCRIPT_DIR/pom.xml" ]; then
-        cp -r "$SCRIPT_DIR"/* "$SCRIPT_DIR"/.* "$INSTALL_DIR"/ 2>/dev/null || true
+        cp -a "$SCRIPT_DIR"/. "$INSTALL_DIR"/
     else
         git clone https://github.com/user/xui-java.git "$INSTALL_DIR" 2>/dev/null || true
     fi
@@ -270,6 +270,100 @@ do_uninstall() {
     fi
 }
 
+# --- Site only ---
+do_site_start() {
+    if [ ! -d "$INSTALL_DIR" ]; then
+        err "Not installed. Run: $0 install"
+        exit 1
+    fi
+    cd "$INSTALL_DIR"
+    info "Starting site..."
+    docker compose up -d site
+    ok "Site started"
+}
+
+do_site_stop() {
+    cd "$INSTALL_DIR"
+    info "Stopping site..."
+    docker compose stop site
+    ok "Site stopped"
+}
+
+do_site_restart() {
+    cd "$INSTALL_DIR"
+    info "Restarting site..."
+    docker compose restart site
+    ok "Site restarted"
+}
+
+do_site_status() {
+    cd "$INSTALL_DIR"
+    docker compose ps site
+}
+
+do_site_logs() {
+    cd "$INSTALL_DIR"
+    docker compose logs -f --tail=100 site
+}
+
+do_site_update() {
+    check_root
+    cd "$INSTALL_DIR"
+    info "Updating site..."
+    docker compose stop site
+    docker compose rm -f site 2>/dev/null || true
+    docker compose build --no-cache site
+    docker compose up -d site
+    ok "Site updated"
+}
+
+# --- Bot only ---
+do_bot_start() {
+    if [ ! -d "$INSTALL_DIR" ]; then
+        err "Not installed. Run: $0 install"
+        exit 1
+    fi
+    cd "$INSTALL_DIR"
+    info "Starting bot..."
+    docker compose up -d bot
+    ok "Bot started"
+}
+
+do_bot_stop() {
+    cd "$INSTALL_DIR"
+    info "Stopping bot..."
+    docker compose stop bot
+    ok "Bot stopped"
+}
+
+do_bot_restart() {
+    cd "$INSTALL_DIR"
+    info "Restarting bot..."
+    docker compose restart bot
+    ok "Bot restarted"
+}
+
+do_bot_status() {
+    cd "$INSTALL_DIR"
+    docker compose ps bot
+}
+
+do_bot_logs() {
+    cd "$INSTALL_DIR"
+    docker compose logs -f --tail=100 bot
+}
+
+do_bot_update() {
+    check_root
+    cd "$INSTALL_DIR"
+    info "Updating bot..."
+    docker compose stop bot
+    docker compose rm -f bot 2>/dev/null || true
+    docker compose build --no-cache bot
+    docker compose up -d bot
+    ok "Bot updated"
+}
+
 case "${1:-}" in
     install)
         do_install
@@ -299,18 +393,70 @@ case "${1:-}" in
     uninstall)
         do_uninstall
         ;;
+    site-start)
+        do_site_start
+        ;;
+    site-stop)
+        do_site_stop
+        ;;
+    site-restart)
+        do_site_restart
+        ;;
+    site-status)
+        do_site_status
+        ;;
+    site-logs)
+        do_site_logs
+        ;;
+    site-update)
+        do_site_update
+        ;;
+    bot-start)
+        do_bot_start
+        ;;
+    bot-stop)
+        do_bot_stop
+        ;;
+    bot-restart)
+        do_bot_restart
+        ;;
+    bot-status)
+        do_bot_status
+        ;;
+    bot-logs)
+        do_bot_logs
+        ;;
+    bot-update)
+        do_bot_update
+        ;;
     *)
-        echo "Usage: $0 {install|start|debug|stop|restart|status|logs [service]|update|uninstall}"
+        echo "Usage: $0 <command>"
         echo ""
-        echo "Commands:"
+        echo "Global commands:"
         echo "  install    - Full installation (Docker, project files, interactive .env setup)"
         echo "  start      - Build and start all containers"
         echo "  stop       - Stop all containers"
         echo "  restart    - Restart all containers"
         echo "  status     - Show container status"
         echo "  logs       - Show logs (default: bot, use 'npm' or 'db' for others)"
-        echo "  update     - Pull latest code and rebuild"
+        echo "  update     - Pull latest code and rebuild all"
         echo "  uninstall  - Remove everything including data"
+        echo ""
+        echo "Site only:"
+        echo "  site-start    - Start site container"
+        echo "  site-stop     - Stop site container"
+        echo "  site-restart  - Restart site container"
+        echo "  site-status   - Show site container status"
+        echo "  site-logs     - Show site logs"
+        echo "  site-update   - Rebuild and update site container"
+        echo ""
+        echo "Bot only:"
+        echo "  bot-start     - Start bot container"
+        echo "  bot-stop      - Stop bot container"
+        echo "  bot-restart   - Restart bot container"
+        echo "  bot-status    - Show bot container status"
+        echo "  bot-logs      - Show bot logs"
+        echo "  bot-update    - Rebuild and update bot container"
         exit 1
         ;;
 esac
