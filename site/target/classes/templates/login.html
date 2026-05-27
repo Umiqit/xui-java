@@ -420,19 +420,24 @@ function onTelegramAuth(user) {
     .catch(() => alert('Ошибка соединения.'));
 }
 </script>
-<script th:unless="${botUsername == null or botUsername.isBlank()}" async src="https://telegram.org/js/telegram-widget.js?22"
-        th:data-telegram-login="${botUsername}"
-        data-size="large"
-        data-onauth="onTelegramAuth(user)"
-        data-request-access="write">
-</script>
 <script th:inline="javascript" th:unless="${botUsername == null or botUsername.isBlank()}">
-(function checkTelegramWidget(){
+(function(){
   var botUsername = /*[[${botUsername}]]*/ '';
+  var container = document.getElementById('telegram-login');
+  if (!container) return;
+
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://telegram.org/js/telegram-widget.js?22';
+  s.setAttribute('data-telegram-login', botUsername);
+  s.setAttribute('data-size', 'large');
+  s.setAttribute('data-onauth', 'onTelegramAuth(user)');
+  s.setAttribute('data-request-access', 'write');
+  container.appendChild(s);
+
   setTimeout(function(){
     var widget = document.querySelector('iframe[id^="telegram-login"]');
-    var container = document.getElementById('telegram-login');
-    if (!widget && container) {
+    if (!widget) {
       container.innerHTML = '<div style="color:var(--md-sys-color-on-surface-variant); font-size:0.85rem; padding:0.5rem;">' +
         'Если кнопка Telegram не появилась, убедитесь, что домен <strong>dreamchatai.website</strong> добавлен в настройках бота через @BotFather (раздел <em>Bot Settings → Domain</em>).<br><br>' +
         'Или напишите боту: <a href="https://t.me/' + botUsername + '" style="color:var(--md-sys-color-primary);" target="_blank">@' + botUsername + '</a>' +
