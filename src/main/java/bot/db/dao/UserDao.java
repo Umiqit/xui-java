@@ -91,6 +91,17 @@ public class UserDao {
         }
     }
 
+    public static void addBalance(long userId, double amount) {
+        String sql = "UPDATE users SET balance = balance + ? WHERE id = ?";
+        try (Connection c = Database.get(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setDouble(1, amount);
+            ps.setLong(2, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("UserDao.addBalance failed", e);
+        }
+    }
+
     public static int countOrders(long userId) {
         String sql = "SELECT COUNT(*) FROM orders WHERE user_id=?";
         try (Connection c = Database.get(); PreparedStatement ps = c.prepareStatement(sql)) {
