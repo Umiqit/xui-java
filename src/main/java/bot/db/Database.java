@@ -92,6 +92,30 @@ public class Database {
                         data        TEXT DEFAULT '{}',
                         updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )""");
+
+                st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS products (
+                        id          BIGSERIAL PRIMARY KEY,
+                        name        TEXT NOT NULL,
+                        description TEXT,
+                        price       DOUBLE PRECISION NOT NULL,
+                        duration_days INTEGER NOT NULL,
+                        traffic_gb  INTEGER NOT NULL,
+                        inbound_id  INTEGER NOT NULL,
+                        sort_order  INTEGER DEFAULT 0,
+                        active      BOOLEAN DEFAULT TRUE
+                    )""");
+
+                st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS orders (
+                        id          BIGSERIAL PRIMARY KEY,
+                        user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        product_id  BIGINT NOT NULL REFERENCES products(id),
+                        key_id      BIGINT REFERENCES keys(id) ON DELETE SET NULL,
+                        amount      DOUBLE PRECISION NOT NULL,
+                        status      TEXT DEFAULT 'completed',
+                        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )""");
             } else {
                 st.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS users (
@@ -232,6 +256,30 @@ public class Database {
                     state       TEXT NOT NULL,
                     data        TEXT DEFAULT '{}',
                     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )""");
+
+            st.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS products (
+                    id          BIGSERIAL PRIMARY KEY,
+                    name        TEXT NOT NULL,
+                    description TEXT,
+                    price       DOUBLE PRECISION NOT NULL,
+                    duration_days INTEGER NOT NULL,
+                    traffic_gb  INTEGER NOT NULL,
+                    inbound_id  INTEGER NOT NULL,
+                    sort_order  INTEGER DEFAULT 0,
+                    active      BOOLEAN DEFAULT TRUE
+                )""");
+
+            st.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS orders (
+                    id          BIGSERIAL PRIMARY KEY,
+                    user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    product_id  BIGINT NOT NULL REFERENCES products(id),
+                    key_id      BIGINT REFERENCES keys(id) ON DELETE SET NULL,
+                    amount      DOUBLE PRECISION NOT NULL,
+                    status      TEXT DEFAULT 'completed',
+                    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )""");
 
             log.info("DB initialized (postgres)");
