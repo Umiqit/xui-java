@@ -22,35 +22,75 @@ public class UpdateRouter {
         try {
             if (update.hasMessage()) {
                 Message msg = update.getMessage();
-                if (msg.getFrom() != null) RegisterMiddleware.register(msg.getFrom());
+                if (msg.getFrom() != null) {
+                    RegisterMiddleware.register(msg.getFrom());
+                }
 
                 if (msg.hasSuccessfulPayment()) {
                     PaymentHandler.handleSuccessfulPayment(bot, msg);
                     return;
                 }
 
-                if (!msg.hasText()) return;
+                if (!msg.hasText()) {
+                    return;
+                }
                 String text = msg.getText();
                 long uid = msg.getFrom().getId();
                 boolean isAdmin = Settings.get().ADMIN_IDS.contains(uid);
 
                 // Admin FSM check first
-                if (isAdmin && AdminHandler.handleFsmStep(bot, msg)) return;
+                if (isAdmin && AdminHandler.handleFsmStep(bot, msg)) {
+                    return;
+                }
 
                 switch (text) {
-                    case "/start"         -> StartHandler.handle(bot, msg);
-                    case "/balance"       -> BalanceHandler.handle(bot, msg);
-                    case "👤 Профиль"     -> ProfileHandler.handle(bot, msg);
-                    case "🔑 Мои ключи"   -> KeysHandler.handleList(bot, msg);
-                    case "🛒 Купить ключ" -> BuyKeyHandler.handleBuyKeyStart(bot, msg);
-                    case "💰 Баланс"      -> BalanceHandler.handle(bot, msg);
-                    case "💳 Пополнить"   -> PaymentHandler.handleTopup(bot, msg);
-                    case "📊 Статистика"  -> ProfileHandler.handle(bot, msg);
-                    case "⚙️ Админка"     -> { if (isAdmin) AdminHandler.handlePanel(bot, msg); }
-                    case "/xui_inbounds" -> { if (isAdmin) AdminHandler.handleXuiInbounds(bot, msg); }
-                    case "/add_key"      -> { if (isAdmin) AdminHandler.handleAddKeyStart(bot, msg); }
-                    case "/users"        -> { if (isAdmin) AdminHandler.handleAddKeyListUsers(bot, msg); }
-                    case "/cancel"       -> { if (isAdmin) AdminHandler.cancel(bot, msg); }
+                    case "/start" ->
+                        StartHandler.handle(bot, msg);
+                    case "Магазин 🏪" ->
+                        ShopHandler.handleShop(bot, msg);
+                    case "Кабинет 🪪" ->
+                        CabinetHandler.handleCabinet(bot, msg);
+                    case "FAQ ⁉️" ->
+                        CabinetHandler.handleFaq(bot, msg);
+                    case "Гарантии ☑️" ->
+                        CabinetHandler.handleWarranty(bot, msg);
+                    case "Отзывы 🗣️" ->
+                        CabinetHandler.handleReviews(bot, msg);
+                    case "Поддержка 🙋" ->
+                        CabinetHandler.handleSupport(bot, msg);
+                    case "Пополнить баланс 💰" ->
+                        PaymentHandler.handleTopup(bot, msg);
+                    case "История покупок 🔍" ->
+                        CabinetHandler.handleHistory(bot, msg);
+                    case "🔑 Мои ключи" ->
+                        KeysHandler.handleList(bot, msg);
+                    case "Назад" ->
+                        StartHandler.handle(bot, msg);
+                    case "⚙️ Админка" -> {
+                        if (isAdmin) {
+                            AdminHandler.handlePanel(bot, msg);
+                    
+                        }}
+                    case "/xui_inbounds" -> {
+                        if (isAdmin) {
+                            AdminHandler.handleXuiInbounds(bot, msg);
+                    
+                        }}
+                    case "/add_key" -> {
+                        if (isAdmin) {
+                            AdminHandler.handleAddKeyStart(bot, msg);
+                    
+                        }}
+                    case "/users" -> {
+                        if (isAdmin) {
+                            AdminHandler.handleAddKeyListUsers(bot, msg);
+                    
+                        }}
+                    case "/cancel" -> {
+                        if (isAdmin) {
+                            AdminHandler.cancel(bot, msg);
+                    
+                        }}
                     default -> {
                         if (text.startsWith("/")) {
                             SendMessage sm = SendMessage.builder()
@@ -65,23 +105,39 @@ public class UpdateRouter {
 
             } else if (update.hasCallbackQuery()) {
                 CallbackQuery call = update.getCallbackQuery();
-                if (call.getFrom() != null) RegisterMiddleware.register(call.getFrom());
+                if (call.getFrom() != null) {
+                    RegisterMiddleware.register(call.getFrom());
+                }
                 String data = call.getData();
 
-                if (data.equals("keys_list"))                        KeysHandler.handleKeysList(bot, call);
-                else if (data.equals("keys_refresh"))                KeysHandler.handleRefresh(bot, call);
-                else if (data.startsWith("key_detail:"))             KeysHandler.handleDetail(bot, call, Long.parseLong(data.split(":")[1]));
-                else if (data.startsWith("key_reset_traffic:"))      KeysHandler.handleResetTraffic(bot, call, Long.parseLong(data.split(":")[1]));
-                else if (data.startsWith("key_delete:"))             KeysHandler.handleDelete(bot, call, Long.parseLong(data.split(":")[1]));
-                else if (data.startsWith("pay_stars:"))              PaymentHandler.handlePayStars(bot, call, Integer.parseInt(data.split(":")[1]));
-                else if (data.startsWith("buy_inbound:"))            BuyKeyHandler.handleInboundSelect(bot, call, Integer.parseInt(data.split(":")[1]));
-                else if (data.startsWith("buy_plan:")) {
-                    String[] parts = data.split(":");
-                    BuyKeyHandler.handlePlanSelect(bot, call, Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
-                }
-                else if (data.startsWith("admin_inbound:")) {
-                    if (Settings.get().ADMIN_IDS.contains(call.getFrom().getId()))
+                if (data.equals("keys_list")) {
+                    KeysHandler.handleKeysList(bot, call); 
+                }else if (data.equals("keys_refresh")) {
+                    KeysHandler.handleRefresh(bot, call); 
+                }else if (data.startsWith("key_detail:")) {
+                    KeysHandler.handleDetail(bot, call, Long.parseLong(data.split(":")[1])); 
+                }else if (data.startsWith("key_reset_traffic:")) {
+                    KeysHandler.handleResetTraffic(bot, call, Long.parseLong(data.split(":")[1])); 
+                }else if (data.startsWith("key_delete:")) {
+                    KeysHandler.handleDelete(bot, call, Long.parseLong(data.split(":")[1])); 
+                }else if (data.startsWith("pay_stars:")) {
+                    PaymentHandler.handlePayStars(bot, call, Integer.parseInt(data.split(":")[1])); 
+                }else if (data.startsWith("shop_buy:")) {
+                    ShopHandler.handleBuy(bot, call, Long.parseLong(data.split(":")[1])); 
+                }else if (data.startsWith("shop_confirm:")) {
+                    ShopHandler.handleConfirm(bot, call, Long.parseLong(data.split(":")[1])); 
+                }else if (data.equals("shop_cancel")) {
+                    bot.execute(org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText.builder()
+                            .chatId(call.getMessage().getChatId().toString())
+                            .messageId(call.getMessage().getMessageId())
+                            .text("Покупка отменена.")
+                            .build());
+                } else if (data.equals("cabinet_back")) {
+                    CabinetHandler.showCabinet(bot, call.getMessage().getChatId(), call.getFrom().getId());
+                } else if (data.startsWith("admin_inbound:")) {
+                    if (Settings.get().ADMIN_IDS.contains(call.getFrom().getId())) {
                         AdminHandler.handleInboundDetail(bot, call, Integer.parseInt(data.split(":")[1]));
+                    }
                 }
 
             } else if (update.hasPreCheckoutQuery()) {
