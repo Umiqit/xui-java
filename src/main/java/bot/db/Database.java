@@ -301,10 +301,10 @@ public class Database {
 
     private static void seedProducts(Statement st) throws SQLException {
         st.executeUpdate("INSERT INTO products (name, description, price, duration_days, traffic_gb, inbound_id, sort_order, active) VALUES " +
-            "('1 месяц', 'Доступ на 1 месяц, 100 GB трафика', 150, 30, 100, 1, 1, 1)," +
-            "('3 месяца', 'Доступ на 3 месяца, 300 GB трафика', 400, 90, 300, 1, 2, 1)," +
-            "('6 месяцев', 'Доступ на 6 месяцев, безлимитный трафик', 700, 180, 0, 1, 3, 1)," +
-            "('12 месяцев', 'Доступ на 12 месяцев, безлимитный трафик', 1200, 365, 0, 1, 4, 1)");
+            "('1 месяц', 'Доступ на 1 месяц, 100 GB трафика', 150, 30, 100, 1, 1, TRUE)," +
+            "('3 месяца', 'Доступ на 3 месяца, 300 GB трафика', 400, 90, 300, 1, 2, TRUE)," +
+            "('6 месяцев', 'Доступ на 6 месяцев, безлимитный трафик', 700, 180, 0, 1, 3, TRUE)," +
+            "('12 месяцев', 'Доступ на 12 месяцев, безлимитный трафик', 1200, 365, 0, 1, 4, TRUE)");
     }
 
     public static Connection get() throws SQLException {
