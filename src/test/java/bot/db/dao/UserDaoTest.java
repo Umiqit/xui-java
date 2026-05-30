@@ -44,10 +44,23 @@ class UserDaoTest {
         long uid = UserDao.getIdByTgId(111);
         assertNotNull(uid);
 
+        long sid;
         try (Connection c = Database.get();
              PreparedStatement ps = c.prepareStatement(
-                     "INSERT INTO keys (user_id, inbound_id, xui_client_id, xui_email) VALUES (?,1,'cid','email')")) {
+                     "INSERT INTO servers (name, location, url, username, password) VALUES ('Test','RU','http://test','u','p')",
+                     java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            ps.executeUpdate();
+            try (java.sql.ResultSet rs = ps.getGeneratedKeys()) {
+                rs.next();
+                sid = rs.getLong(1);
+            }
+        }
+
+        try (Connection c = Database.get();
+             PreparedStatement ps = c.prepareStatement(
+                     "INSERT INTO keys (user_id, server_id, inbound_id, xui_client_id, xui_email) VALUES (?,?,1,'cid','email')")) {
             ps.setLong(1, uid);
+            ps.setLong(2, sid);
             ps.executeUpdate();
         }
 

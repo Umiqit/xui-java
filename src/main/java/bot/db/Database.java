@@ -60,9 +60,24 @@ public class Database {
                     )""");
 
                 st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS servers (
+                        id          BIGSERIAL PRIMARY KEY,
+                        name        TEXT NOT NULL,
+                        location    TEXT DEFAULT '',
+                        url         TEXT NOT NULL,
+                        username    TEXT NOT NULL,
+                        password    TEXT NOT NULL,
+                        cert_path   TEXT DEFAULT '',
+                        active      BOOLEAN DEFAULT TRUE,
+                        weight      INTEGER DEFAULT 1,
+                        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )""");
+
+                st.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS keys (
                         id              BIGSERIAL PRIMARY KEY,
                         user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        server_id       BIGINT NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
                         inbound_id      INTEGER NOT NULL,
                         xui_client_id   TEXT NOT NULL,
                         xui_email       TEXT NOT NULL,
@@ -128,9 +143,24 @@ public class Database {
                     )""");
 
                 st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS servers (
+                        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name        TEXT NOT NULL,
+                        location    TEXT DEFAULT '',
+                        url         TEXT NOT NULL,
+                        username    TEXT NOT NULL,
+                        password    TEXT NOT NULL,
+                        cert_path   TEXT DEFAULT '',
+                        active      INTEGER DEFAULT 1,
+                        weight      INTEGER DEFAULT 1,
+                        created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )""");
+
+                st.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS keys (
                         id              INTEGER PRIMARY KEY AUTOINCREMENT,
                         user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        server_id       INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
                         inbound_id      INTEGER NOT NULL,
                         xui_client_id   TEXT NOT NULL,
                         xui_email       TEXT NOT NULL,
@@ -186,6 +216,50 @@ public class Database {
                     )""");
             }
 
+            // Migration: add server_id to keys if missing (legacy DBs)
+            try {
+                st.executeQuery("SELECT server_id FROM keys LIMIT 1");
+            } catch (SQLException e) {
+                try {
+                    if (isPostgres) {
+                        st.executeUpdate("ALTER TABLE keys ADD COLUMN server_id BIGINT");
+                    } else {
+                        st.executeUpdate("ALTER TABLE keys ADD COLUMN server_id INTEGER");
+                    }
+                    log.info("Migrated keys table: added server_id");
+                } catch (SQLException ex2) {
+                    log.warn("Migration add server_id failed (maybe already exists): {}", ex2.getMessage());
+                }
+            }
+
+            // Seed default server from env if none exist and XUI_URL is set
+            try {
+                ResultSet rsSrv = st.executeQuery("SELECT COUNT(*) FROM servers");
+                boolean hasServers = rsSrv.next() && rsSrv.getInt(1) > 0;
+                if (!hasServers && Settings.get().isXuiEnabled()) {
+                    String insertSrv;
+                    if (isPostgres) {
+                        insertSrv = "INSERT INTO servers (name, location, url, username, password, cert_path, active, weight) VALUES " +
+                            "('Default', 'Auto', '" + Settings.get().XUI_URL + "', '" + Settings.get().XUI_USERNAME + "', '" + Settings.get().XUI_PASSWORD + "', '" + Settings.get().XUI_CERT_PATH + "', TRUE, 1)";
+                    } else {
+                        insertSrv = "INSERT INTO servers (name, location, url, username, password, cert_path, active, weight) VALUES " +
+                            "('Default', 'Auto', '" + Settings.get().XUI_URL + "', '" + Settings.get().XUI_USERNAME + "', '" + Settings.get().XUI_PASSWORD + "', '" + Settings.get().XUI_CERT_PATH + "', 1, 1)";
+                    }
+                    st.executeUpdate(insertSrv);
+                    log.info("Default server seeded from XUI_URL env");
+
+                    // Bind legacy keys to default server
+                    ResultSet rsDef = st.executeQuery("SELECT id FROM servers ORDER BY id ASC LIMIT 1");
+                    if (rsDef.next()) {
+                        long defSrvId = rsDef.getLong(1);
+                        st.executeUpdate("UPDATE keys SET server_id = " + defSrvId + " WHERE server_id IS NULL");
+                        log.info("Legacy keys bound to default server id={}", defSrvId);
+                    }
+                }
+            } catch (SQLException e) {
+                log.warn("Default server seeding failed: {}", e.getMessage());
+            }
+
             log.info("DB initialized ({})", isPostgres ? "postgres" : "sqlite");
         } catch (SQLException e) {
             throw new RuntimeException("DB init failed", e);
@@ -225,9 +299,24 @@ public class Database {
                 )""");
 
             st.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS servers (
+                    id          BIGSERIAL PRIMARY KEY,
+                    name        TEXT NOT NULL,
+                    location    TEXT DEFAULT '',
+                    url         TEXT NOT NULL,
+                    username    TEXT NOT NULL,
+                    password    TEXT NOT NULL,
+                    cert_path   TEXT DEFAULT '',
+                    active      BOOLEAN DEFAULT TRUE,
+                    weight      INTEGER DEFAULT 1,
+                    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )""");
+
+            st.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS keys (
                     id              BIGSERIAL PRIMARY KEY,
                     user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    server_id       BIGINT NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
                     inbound_id      INTEGER NOT NULL,
                     xui_client_id   TEXT NOT NULL,
                     xui_email       TEXT NOT NULL,
@@ -281,6 +370,38 @@ public class Database {
                     status      TEXT DEFAULT 'completed',
                     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )""");
+
+            // Migration: add server_id to keys if missing (legacy DBs)
+            try {
+                st.executeQuery("SELECT server_id FROM keys LIMIT 1");
+            } catch (SQLException e) {
+                try {
+                    st.executeUpdate("ALTER TABLE keys ADD COLUMN server_id BIGINT");
+                    log.info("Migrated keys table: added server_id");
+                } catch (SQLException ex2) {
+                    log.warn("Migration add server_id failed (maybe already exists): {}", ex2.getMessage());
+                }
+            }
+
+            // Seed default server from env if none exist and XUI_URL is set
+            try {
+                ResultSet rsSrv = st.executeQuery("SELECT COUNT(*) FROM servers");
+                boolean hasServers = rsSrv.next() && rsSrv.getInt(1) > 0;
+                if (!hasServers && Settings.get().isXuiEnabled()) {
+                    st.executeUpdate("INSERT INTO servers (name, location, url, username, password, cert_path, active, weight) VALUES " +
+                        "('Default', 'Auto', '" + Settings.get().XUI_URL + "', '" + Settings.get().XUI_USERNAME + "', '" + Settings.get().XUI_PASSWORD + "', '" + Settings.get().XUI_CERT_PATH + "', TRUE, 1)");
+                    log.info("Default server seeded from XUI_URL env");
+
+                    ResultSet rsDef = st.executeQuery("SELECT id FROM servers ORDER BY id ASC LIMIT 1");
+                    if (rsDef.next()) {
+                        long defSrvId = rsDef.getLong(1);
+                        st.executeUpdate("UPDATE keys SET server_id = " + defSrvId + " WHERE server_id IS NULL");
+                        log.info("Legacy keys bound to default server id={}", defSrvId);
+                    }
+                }
+            } catch (SQLException e) {
+                log.warn("Default server seeding failed: {}", e.getMessage());
+            }
 
             log.info("DB initialized (postgres)");
         } catch (SQLException e) {

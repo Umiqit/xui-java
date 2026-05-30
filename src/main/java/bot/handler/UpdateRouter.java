@@ -86,6 +86,21 @@ public class UpdateRouter {
                             AdminHandler.handleAddKeyListUsers(bot, msg);
                     
                         }}
+                    case "/servers" -> {
+                        if (isAdmin) {
+                            AdminHandler.handleServers(bot, msg);
+                    
+                        }}
+                    case "/add_server" -> {
+                        if (isAdmin) {
+                            AdminHandler.handleAddServerStart(bot, msg);
+                    
+                        }}
+                    case "/del_server" -> {
+                        if (isAdmin) {
+                            AdminHandler.handleDelServerStart(bot, msg);
+                    
+                        }}
                     case "/cancel" -> {
                         if (isAdmin) {
                             AdminHandler.cancel(bot, msg);
@@ -134,10 +149,37 @@ public class UpdateRouter {
                             .build());
                 } else if (data.equals("cabinet_back")) {
                     CabinetHandler.showCabinet(bot, call.getMessage().getChatId(), call.getFrom().getId());
+                } else if (data.startsWith("admin_server:")) {
+                    if (Settings.get().ADMIN_IDS.contains(call.getFrom().getId())) {
+                        long serverId = Long.parseLong(data.split(":")[1]);
+                        AdminHandler.handleServerInbounds(bot, call, serverId);
+                    }
                 } else if (data.startsWith("admin_inbound:")) {
                     if (Settings.get().ADMIN_IDS.contains(call.getFrom().getId())) {
-                        AdminHandler.handleInboundDetail(bot, call, Integer.parseInt(data.split(":")[1]));
+                        String[] parts = data.split(":");
+                        long serverId = Long.parseLong(parts[1]);
+                        int inboundId = Integer.parseInt(parts[2]);
+                        AdminHandler.handleInboundDetail(bot, call, serverId, inboundId);
                     }
+                } else if (data.startsWith("admin_addkey_server:")) {
+                    if (Settings.get().ADMIN_IDS.contains(call.getFrom().getId())) {
+                        long serverId = Long.parseLong(data.split(":")[1]);
+                        AdminHandler.handleAddKeyServerSelect(bot, call, serverId);
+                    }
+                } else if (data.startsWith("buy_server:")) {
+                    long serverId = Long.parseLong(data.split(":")[1]);
+                    BuyKeyHandler.handleServerSelect(bot, call, serverId);
+                } else if (data.startsWith("buy_inbound:")) {
+                    String[] parts = data.split(":");
+                    long serverId = Long.parseLong(parts[1]);
+                    int inboundId = Integer.parseInt(parts[2]);
+                    BuyKeyHandler.handleInboundSelect(bot, call, serverId, inboundId);
+                } else if (data.startsWith("buy_plan:")) {
+                    String[] parts = data.split(":");
+                    long serverId = Long.parseLong(parts[1]);
+                    int inboundId = Integer.parseInt(parts[2]);
+                    int planId = Integer.parseInt(parts[3]);
+                    BuyKeyHandler.handlePlanSelect(bot, call, serverId, inboundId, planId);
                 }
 
             } else if (update.hasPreCheckoutQuery()) {

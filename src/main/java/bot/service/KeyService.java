@@ -29,7 +29,8 @@ public class KeyService {
     public static void resetTraffic(long keyId, long tgId) {
         Key key = KeyDao.findByIdAndUserTgId(keyId, tgId);
         if (key == null) throw new IllegalArgumentException("Key not found");
-        boolean ok = XuiClient.get().resetClientTraffic(key.inboundId, key.xuiEmail);
+        XuiClient client = XuiClientFactory.get(key.serverId);
+        boolean ok = client.resetClientTraffic(key.inboundId, key.xuiEmail);
         if (!ok) throw new XuiApiException("Panel returned failure for reset traffic");
         KeyDao.resetTraffic(keyId);
     }
@@ -37,14 +38,16 @@ public class KeyService {
     public static void deleteKey(long keyId, long tgId) {
         Key key = KeyDao.findByIdAndUserTgId(keyId, tgId);
         if (key == null) throw new IllegalArgumentException("Key not found");
-        boolean ok = XuiClient.get().deleteClient(key.inboundId, key.xuiClientId);
+        XuiClient client = XuiClientFactory.get(key.serverId);
+        boolean ok = client.deleteClient(key.inboundId, key.xuiClientId);
         if (!ok) throw new XuiApiException("Panel returned failure for delete client");
         KeyDao.delete(keyId);
     }
 
     private static void refreshKeyStats(Key key) {
         try {
-            JsonNode stats = XuiClient.get().getClientStats(key.xuiEmail);
+            XuiClient client = XuiClientFactory.get(key.serverId);
+            JsonNode stats = client.getClientStats(key.xuiEmail);
             if (stats != null) {
                 long up = stats.path("up").asLong(0);
                 long down = stats.path("down").asLong(0);

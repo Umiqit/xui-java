@@ -15,6 +15,9 @@ public class Key {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "server_id", nullable = false)
+    private Long serverId;
+
     @Column(name = "inbound_id", nullable = false)
     private Integer inboundId;
 
@@ -47,6 +50,9 @@ public class Key {
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
+
+    public Long getServerId() { return serverId; }
+    public void setServerId(Long serverId) { this.serverId = serverId; }
 
     public Integer getInboundId() { return inboundId; }
     public void setInboundId(Integer inboundId) { this.inboundId = inboundId; }

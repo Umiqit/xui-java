@@ -1,0 +1,4 @@
+bot/service/PaymentServiceTest.class
+bot/db/dao/UserDaoTest.class
+bot/db/DatabaseTest.class
+bot/db/model/KeyTest.class

@@ -1224,6 +1224,7 @@ body {
             <div>
               <h3 th:text="${key.remark != null && !key.remark.isEmpty()} ? ${key.remark} : ${key.xuiEmail}">Email</h3>
               <p class="uuid" th:text="'UUID: ' + ${key.xuiClientId}">UUID</p>
+              <p class="uuid" th:text="'🖥 ' + ${serverNames[key.serverId] != null ? serverNames[key.serverId] : 'Server ' + key.serverId}" style="margin-top:0.25rem; color:var(--md-sys-color-primary);">Server</p>
             </div>
             <span th:if="${key.expired}" class="status-badge status-badge-offline">Истёк</span>
             <span th:unless="${key.expired}" class="status-badge status-badge-online">Активен</span>

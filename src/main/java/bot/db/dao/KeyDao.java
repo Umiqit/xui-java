@@ -15,8 +15,9 @@ public class KeyDao {
 
     public static List<Key> findByUserTgId(long tgId) {
         String sql = """
-                SELECT k.* FROM keys k
+                SELECT k.*, s.name as server_name, s.location as server_location FROM keys k
                 JOIN users u ON u.id = k.user_id
+                LEFT JOIN servers s ON s.id = k.server_id
                 WHERE u.tg_id = ?
                 ORDER BY k.created_at DESC
                 """;
@@ -35,8 +36,9 @@ public class KeyDao {
 
     public static Key findByIdAndUserTgId(long keyId, long tgId) {
         String sql = """
-                SELECT k.* FROM keys k
+                SELECT k.*, s.name as server_name, s.location as server_location FROM keys k
                 JOIN users u ON u.id = k.user_id
+                LEFT JOIN servers s ON s.id = k.server_id
                 WHERE k.id = ? AND u.tg_id = ?
                 """;
         try (Connection c = Database.get();
@@ -90,18 +92,19 @@ public class KeyDao {
 
     public static long insert(Key key) {
         String sql = """
-                INSERT INTO keys (user_id, inbound_id, xui_client_id, xui_email, remark, expiry_ts, traffic_total)
-                VALUES (?,?,?,?,?,?,?)
+                INSERT INTO keys (user_id, server_id, inbound_id, xui_client_id, xui_email, remark, expiry_ts, traffic_total)
+                VALUES (?,?,?,?,?,?,?,?)
                 """;
         try (Connection c = Database.get();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setLong(1, key.userId);
-            ps.setInt(2, key.inboundId);
-            ps.setString(3, key.xuiClientId);
-            ps.setString(4, key.xuiEmail);
-            ps.setString(5, key.remark);
-            ps.setLong(6, key.expiryTs);
-            ps.setLong(7, key.trafficTotal);
+            ps.setLong(2, key.serverId);
+            ps.setInt(3, key.inboundId);
+            ps.setString(4, key.xuiClientId);
+            ps.setString(5, key.xuiEmail);
+            ps.setString(6, key.remark);
+            ps.setLong(7, key.expiryTs);
+            ps.setLong(8, key.trafficTotal);
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 return rs.next() ? rs.getLong(1) : -1;
@@ -115,6 +118,7 @@ public class KeyDao {
         Key k = new Key();
         k.id = rs.getLong("id");
         k.userId = rs.getLong("user_id");
+        k.serverId = rs.getLong("server_id");
         k.inboundId = rs.getInt("inbound_id");
         k.xuiClientId = rs.getString("xui_client_id");
         k.xuiEmail = rs.getString("xui_email");

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ — DreamCore</title>
+<style>
+:root {
+  --md-sys-color-primary: #ff9d00;
+  --md-sys-color-on-primary: #0a0a0a;
+  --md-sys-color-surface: #141416;
+  --md-sys-color-surface-dim: #0f0f11;
+  --md-sys-color-surface-bright: #1c1c1f;
+  --md-sys-color-surface-container: #18181a;
+  --md-sys-color-surface-container-high: #1e1e21;
+  --md-sys-color-on-surface: #f0f0f5;
+  --md-sys-color-on-surface-variant: #8a8a95;
+  --md-sys-color-outline: rgba(255,157,0,0.15);
+  --md-sys-color-outline-variant: rgba(255,157,0,0.08);
+  --rail-width: 80px;
+  --gap: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--md-sys-color-surface-dim);
+  color: var(--md-sys-color-on-surface);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+.main { margin-left: var(--rail-width); min-height: 100vh; display: flex; flex-direction: column; }
+.container { max-width: 800px; margin: 0 auto; padding: 2rem; width: 100%; }
+.page-title { font-size: 2.5rem; font-weight: 400; margin-bottom: 2rem; }
+.faq-item { background: var(--md-sys-color-surface-container); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--md-sys-color-outline-variant); }
+.faq-item h3 { font-size: 1.1rem; font-weight: 500; color: var(--md-sys-color-primary); margin-bottom: 0.5rem; }
+.faq-item p { color: var(--md-sys-color-on-surface-variant); font-size: 0.95rem; }
+.footer { margin-top: auto; padding: 1.5rem 0 2rem; border-top: 1px solid var(--md-sys-color-outline-variant); text-align: center; color: var(--md-sys-color-on-surface-variant); font-size: 0.85rem; }
+@media (max-width: 900px) { .main { margin-left: 64px; } }
+@media (max-width: 600px) { .main { margin-left: 0; } .container { padding: 1rem; } .page-title { font-size: 1.75rem; } }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<div id="rail-placeholder"></div>
+<script>
+(function(){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET','/rail.html',true);
+  xhr.onreadystatechange=function(){
+    if(xhr.readyState===4 && xhr.status===200){
+      var ph = document.getElementById('rail-placeholder');
+      if(ph) ph.outerHTML = xhr.responseText;
+    }
+  };
+  xhr.send();
+})();
+</script>
+
+<div class="main">
+  <div class="container">
+    <h1 class="page-title">FAQ — Частые вопросы</h1>
+
+    <div class="faq-item">
+      <h3>Что такое DreamCore?</h3>
+      <p>DreamCore — это VPN-сервис для свободного и безопасного доступа к интернету. Мы используем современные протоколы и не ведём логов.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Как подключиться?</h3>
+      <p>После покупки ключа в нашем Telegram-боте вы получите ссылку для подключения. Скопируйте её в приложение V2Ray, Nekoray, V2RayNG или аналогичное.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>На каких устройствах работает?</h3>
+      <p>Ключи работают на Windows, macOS, Linux, iOS и Android. Достаточно установить любой клиент, поддерживающий VLESS/Xray.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Как пополнить баланс?</h3>
+      <p>В Telegram-боте перейдите в раздел «Кабинет → Пополнить баланс» и выберите удобную сумму. Оплата происходит через Telegram Stars.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Можно ли вернуть деньги?</h3>
+      <p>Возврат возможен в течение 24 часов с момента покупки при условии, что ключ не был активирован. Подробности на странице «Политика возврата».</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Куда обращаться в случае проблем?</h3>
+      <p>По всем вопросам пишите в поддержку через Telegram-бота в разделе «Поддержка».</p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2026 DreamCore. Воплощаем цифровые мечты.
+  </footer>
+</div>
+
+</body>
+</html>

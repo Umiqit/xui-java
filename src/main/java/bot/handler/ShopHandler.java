@@ -11,6 +11,8 @@ import bot.db.model.User;
 import bot.keyboard.Menus;
 import bot.service.XuiApiException;
 import bot.service.XuiClient;
+import bot.service.XuiClientFactory;
+import bot.db.model.Server;
 import bot.util.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,9 +120,23 @@ public class ShopHandler {
                 : 0;
         String email = "dc_" + tgId + "_" + UUID.randomUUID().toString().substring(0, 8);
 
+        Server server = XuiClientFactory.pickBestServer();
+        if (server == null) {
+            UserDao.deductBalance(user.id, -product.price);
+            bot.execute(EditMessageText.builder()
+                    .chatId(call.getMessage().getChatId().toString())
+                    .messageId(call.getMessage().getMessageId())
+                    .text(Messages.SHOP_BUY_ERROR)
+                    .parseMode("HTML")
+                    .replyMarkup(Menus.backToCabinetKeyboard())
+                    .build());
+            return;
+        }
+
         try {
-            XuiClient.get().login();
-            XuiClient.AddResult result = XuiClient.get().addClient(
+            XuiClient client = XuiClientFactory.get(server.id);
+            client.login();
+            XuiClient.AddResult result = client.addClient(
                     product.inboundId,
                     email,
                     product.name,
@@ -143,6 +159,7 @@ public class ShopHandler {
             // Save key to DB
             Key key = new Key();
             key.userId = user.id;
+            key.serverId = server.id;
             key.inboundId = product.inboundId;
             key.xuiClientId = result.clientId();
             key.xuiEmail = email;

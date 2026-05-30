@@ -1,6 +1,8 @@
 package bot.handler;
 
 import bot.db.model.Key;
+import bot.db.model.Server;
+import bot.db.dao.ServerDao;
 import bot.keyboard.Menus;
 import bot.service.KeyService;
 import bot.util.Messages;
@@ -70,8 +72,14 @@ public class KeysHandler {
         }
         String status = k.isExpired() ? "🔴 Истёк" : "🟢 Активен";
         String totalStr = k.trafficTotalGb() == 0 ? "∞" : String.valueOf(k.trafficTotalGb());
+        String serverName = "";
+        try {
+            Server srv = ServerDao.findById(k.serverId);
+            serverName = srv != null ? srv.displayName() : "Unknown";
+        } catch (Exception ignored) {}
         String text = "🔑 <b>" + (k.remark != null && !k.remark.isBlank() ? k.remark : k.xuiEmail) + "</b>\n\n" +
                 "Статус: " + status + "\n" +
+                "🖥 Сервер: " + serverName + "\n" +
                 "Email (XUI): <code>" + k.xuiEmail + "</code>\n" +
                 "Inbound ID: " + k.inboundId + "\n\n" +
                 "📊 Трафик: " + k.trafficUsedGb() + " / " + totalStr + " GB\n" +

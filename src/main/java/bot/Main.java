@@ -4,7 +4,8 @@ import bot.config.Settings;
 import bot.db.Database;
 import bot.handler.UpdateRouter;
 import bot.service.XuiApiException;
-import bot.service.XuiClient;
+import bot.service.XuiClientFactory;
+import bot.db.model.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -33,15 +34,16 @@ public class Main extends TelegramLongPollingBot {
 
     public static void main(String[] args) throws TelegramApiException {
         Database.init();
-        if (Settings.get().isXuiEnabled()) {
+        Server first = bot.db.dao.ServerDao.findFirst();
+        if (first != null) {
             try {
-                XuiClient.get().login();
-                log.info("XUI login: OK");
+                XuiClientFactory.get(first.id).login();
+                log.info("XUI login on {}: OK", first.displayName());
             } catch (XuiApiException e) {
                 log.error("XUI login failed: {}", e.getMessage());
             }
         } else {
-            log.info("XUI panel not configured, skipping login");
+            log.info("No servers configured yet");
         }
 
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);

@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 public class Key {
     public long id;
     public long userId;
+    public long serverId;
     public int inboundId;
     public String xuiClientId;
     public String xuiEmail;

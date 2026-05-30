@@ -149,38 +149,54 @@ public class Menus {
         ));
     }
 
-    public static InlineKeyboardMarkup adminInboundsKeyboard(List<com.fasterxml.jackson.databind.JsonNode> inbounds) {
+    public static InlineKeyboardMarkup adminInboundsKeyboard(List<com.fasterxml.jackson.databind.JsonNode> inbounds, long serverId) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         for (com.fasterxml.jackson.databind.JsonNode ib : inbounds) {
             int id = ib.path("id").asInt();
             String remark = ib.path("remark").asText(String.valueOf(id));
             rows.add(List.of(InlineKeyboardButton.builder()
                     .text("📡 " + remark + " (id: " + id + ")")
-                    .callbackData("admin_inbound:" + id).build()));
+                    .callbackData("admin_inbound:" + serverId + ":" + id).build()));
         }
         return new InlineKeyboardMarkup(rows);
     }
 
-    public static InlineKeyboardMarkup buyInboundsKeyboard(List<com.fasterxml.jackson.databind.JsonNode> inbounds) {
+    public static InlineKeyboardMarkup serversKeyboard(List<bot.db.model.Server> servers, String prefix) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (bot.db.model.Server s : servers) {
+            String label = s.active ? "🟢 " : "🔴 ";
+            label += s.displayName();
+            if (s.location != null && !s.location.isBlank()) {
+                label += " (" + s.location + ")";
+            }
+            rows.add(List.of(InlineKeyboardButton.builder()
+                    .text(label)
+                    .callbackData(prefix + ":" + s.id)
+                    .build()));
+        }
+        return new InlineKeyboardMarkup(rows);
+    }
+
+    public static InlineKeyboardMarkup buyInboundsKeyboard(List<com.fasterxml.jackson.databind.JsonNode> inbounds, long serverId) {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         for (com.fasterxml.jackson.databind.JsonNode ib : inbounds) {
             int id = ib.path("id").asInt();
             String remark = ib.path("remark").asText(String.valueOf(id));
             rows.add(List.of(InlineKeyboardButton.builder()
                     .text("📡 " + remark)
-                    .callbackData("buy_inbound:" + id).build()));
+                    .callbackData("buy_inbound:" + serverId + ":" + id).build()));
         }
         return new InlineKeyboardMarkup(rows);
     }
 
-    public static InlineKeyboardMarkup buyPlansKeyboard(int inboundId) {
+    public static InlineKeyboardMarkup buyPlansKeyboard(long serverId, int inboundId) {
         return new InlineKeyboardMarkup(List.of(
                 List.of(InlineKeyboardButton.builder()
                         .text(String.format(bot.util.Messages.BUY_KEY_PLAN_1, bot.handler.BuyKeyHandler.PLAN_1_PRICE))
-                        .callbackData("buy_plan:" + inboundId + ":1").build()),
+                        .callbackData("buy_plan:" + serverId + ":" + inboundId + ":1").build()),
                 List.of(InlineKeyboardButton.builder()
                         .text(String.format(bot.util.Messages.BUY_KEY_PLAN_2, bot.handler.BuyKeyHandler.PLAN_2_PRICE))
-                        .callbackData("buy_plan:" + inboundId + ":2").build())
+                        .callbackData("buy_plan:" + serverId + ":" + inboundId + ":2").build())
         ));
     }
 }

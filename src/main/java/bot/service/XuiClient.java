@@ -1,6 +1,6 @@
 package bot.service;
 
-import bot.config.Settings;
+import bot.db.model.Server;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -23,34 +23,23 @@ import java.util.concurrent.TimeUnit;
 public class XuiClient {
 
     private static final Logger log = LoggerFactory.getLogger(XuiClient.class);
-    private static final XuiClient INSTANCE = new XuiClient();
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final MediaType FORM = MediaType.parse("application/x-www-form-urlencoded");
 
     private final OkHttpClient http;
     private final ObjectMapper mapper = new ObjectMapper();
     private final String baseUrl;
+    private final String username;
+    private final String password;
 
-    private XuiClient() {
-        String url = Settings.get().XUI_URL;
-        if (url == null || url.isBlank()) {
-            this.baseUrl = null;
-            this.http = null;
-        } else {
-            this.baseUrl = url.replaceAll("/+$", "");
-            this.http = buildClient();
-        }
+    public XuiClient(Server server) {
+        this.baseUrl = server.url.replaceAll("/+$", "");
+        this.username = server.username;
+        this.password = server.password;
+        this.http = buildClient(server.certPath);
     }
 
-    private void ensureEnabled() {
-        if (baseUrl == null) {
-            throw new XuiApiException("XUI panel is not configured");
-        }
-    }
-
-    public static XuiClient get() { return INSTANCE; }
-
-    private OkHttpClient buildClient() {
+    private OkHttpClient buildClient(String certPath) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
@@ -60,7 +49,6 @@ public class XuiClient {
                     public List<Cookie> loadForRequest(HttpUrl url) { return cookies; }
                 });
 
-        String certPath = Settings.get().XUI_CERT_PATH;
         if (certPath != null && !certPath.isBlank()) {
             try {
                 KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -82,9 +70,7 @@ public class XuiClient {
     }
 
     public void login() {
-        ensureEnabled();
-        String body = "username=" + Settings.get().XUI_USERNAME +
-                      "&password=" + Settings.get().XUI_PASSWORD;
+        String body = "username=" + username + "&password=" + password;
         Request req = new Request.Builder()
                 .url(baseUrl + "/login")
                 .post(RequestBody.create(body, FORM))
@@ -112,7 +98,6 @@ public class XuiClient {
     }
 
     public List<JsonNode> getInbounds() {
-        ensureEnabled();
         try {
             Request req = new Request.Builder().url(baseUrl + "/xui/inbound/list").get().build();
             JsonNode data = doRequest(req);
@@ -126,7 +111,6 @@ public class XuiClient {
     }
 
     public JsonNode getClientStats(String email) {
-        ensureEnabled();
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/getClientTraffics/" + email)
@@ -143,7 +127,6 @@ public class XuiClient {
     public AddResult addClient(int inboundId, String email, String remark,
                                long expiryTime, int totalGb) {
         String clientId = UUID.randomUUID().toString();
-        ensureEnabled();
         long totalBytes = totalGb > 0 ? (long) totalGb * 1024 * 1024 * 1024 : 0;
 
         ObjectNode client = mapper.createObjectNode();
@@ -179,7 +162,6 @@ public class XuiClient {
     }
 
     public boolean deleteClient(int inboundId, String clientId) {
-        ensureEnabled();
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/" + inboundId + "/delClient/" + clientId)
@@ -193,7 +175,6 @@ public class XuiClient {
     }
 
     public boolean resetClientTraffic(int inboundId, String email) {
-        ensureEnabled();
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/" + inboundId + "/resetClientTraffic/" + email)
@@ -203,6 +184,37 @@ public class XuiClient {
             return resp.path("success").asBoolean(false);
         } catch (IOException e) {
             throw new XuiApiException("Failed to reset client traffic", e);
+        }
+    }
+
+    public boolean updateClient(int inboundId, String clientId, String email,
+                                 Boolean enable, Long expiryTime, Long totalBytes) {
+        ObjectNode client = mapper.createObjectNode();
+        client.put("id", clientId);
+        client.put("email", email);
+        if (enable != null) client.put("enable", enable);
+        if (expiryTime != null) client.put("expiryTime", expiryTime);
+        if (totalBytes != null) client.put("totalGB", totalBytes);
+
+        ArrayNode clients = mapper.createArrayNode();
+        clients.add(client);
+
+        ObjectNode settings = mapper.createObjectNode();
+        settings.set("clients", clients);
+
+        ObjectNode payload = mapper.createObjectNode();
+        payload.put("id", inboundId);
+        payload.set("settings", settings);
+
+        try {
+            Request req = new Request.Builder()
+                    .url(baseUrl + "/xui/inbound/updateClient/" + clientId)
+                    .post(RequestBody.create(payload.toString(), JSON))
+                    .build();
+            JsonNode resp = doRequest(req);
+            return resp.path("success").asBoolean(false);
+        } catch (IOException e) {
+            throw new XuiApiException("Failed to update client", e);
         }
     }
 }

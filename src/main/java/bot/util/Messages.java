@@ -25,7 +25,8 @@ public final class Messages {
             Доступные команды:
             /add_key — добавить ключ пользователю
             /xui_inbounds — список inbound'ов с панели
-            /users — список пользователей""";
+            /users — список пользователей
+            /servers — управление серверами""";
     public static final String XUI_NO_INBOUNDS = "Панель недоступна или нет inbound'ов.";
     public static final String XUI_INBOUND_NOT_FOUND = "Inbound не найден";
     public static final String ADD_KEY_ENTER_TG_ID = "Telegram ID пользователя:";
@@ -47,8 +48,11 @@ public final class Messages {
     public static final String USERS_TITLE = "<b>Пользователи</b>:\n\n";
     public static final String CANCEL_OK = "Действие отменено.";
     public static final String BALANCE_TEXT = "💰 <b>Твой баланс:</b> %.2f ⭐";
-    public static final String BUY_KEY_TITLE = "🛒 <b>Покупка ключа</b>\n\nВыбери inbound (сервер):";
-    public static final String BUY_KEY_NO_INBOUNDS = "Нет доступных серверов для покупки. Попробуй позже.";
+    public static final String BUY_KEY_TITLE = "🛒 <b>Покупка ключа</b>\n\nСервер: <b>%s</b>\n\nВыбери inbound:";
+    public static final String BUY_KEY_NO_INBOUNDS = "Нет доступных inbound'ов на этом сервере. Попробуй позже.";
+    public static final String BUY_KEY_SELECT_SERVER = "🌐 <b>Выбери сервер</b> для создания ключа:";
+    public static final String BUY_KEY_NO_SERVERS = "Нет доступных серверов для покупки. Попробуй позже.";
+    public static final String SERVER_NOT_FOUND = "Сервер не найден или неактивен.";
     public static final String BUY_KEY_SELECT_PLAN = "Выбери тариф для <b>%s</b>:";
     public static final String BUY_KEY_INSUFFICIENT_BALANCE = "❌ Недостаточно средств. Твой баланс: <b>%.2f ⭐</b>, а нужно <b>%d ⭐</b>.\n\nПополни баланс через меню 💳 Пополнить.";
     public static final String BUY_KEY_SUCCESS = """
@@ -67,6 +71,7 @@ public final class Messages {
     public static final String BUY_KEY_ERROR = "❌ Ошибка при создании ключа на сервере. Попробуй позже или обратись к администратору.";
     public static final String BUY_KEY_PLAN_1 = "📅 30 дней / 100 GB — %d ⭐";
     public static final String BUY_KEY_PLAN_2 = "📅 90 дней / 500 GB — %d ⭐";
+    public static final String NO_SERVERS = "Серверы не настроены. Используй /add_server.";
     public static final String SERVICE_UNAVAILABLE = "⚠️ Сервис VPN временно недоступен. Попробуй позже.";
 
     // Shop
