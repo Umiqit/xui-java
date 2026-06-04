@@ -2,9 +2,10 @@ package bot.util;
 
 public final class Messages {
 
-    private Messages() {}
+    private Messages() {
+    }
 
-    public static final String START_HELLO = "Привет, <b>%s</b>!\n\nУправляй своими VPN-ключами через бота.";
+    public static final String START_HELLO = "Привет, <b>%s</b>!\n\nДобро пожаловать в DreamCore. Выбери нужный раздел в меню.";
     public static final String UNKNOWN_COMMAND = "Не понял команду. Используй кнопки меню.";
     public static final String NO_KEYS = "У тебя пока нет ключей.";
     public static final String KEYS_TITLE = "🔑 <b>Твои ключи</b> (%d):";
@@ -45,5 +46,45 @@ public final class Messages {
     public static final String NO_USERS = "Пользователей нет.";
     public static final String USERS_TITLE = "<b>Пользователи</b>:\n\n";
     public static final String CANCEL_OK = "Действие отменено.";
+    public static final String BALANCE_TEXT = "💰 <b>Твой баланс:</b> %.2f ⭐";
+    public static final String BUY_KEY_TITLE = "🛒 <b>Покупка ключа</b>\n\nВыбери inbound (сервер):";
+    public static final String BUY_KEY_NO_INBOUNDS = "Нет доступных серверов для покупки. Попробуй позже.";
+    public static final String BUY_KEY_SELECT_PLAN = "Выбери тариф для <b>%s</b>:";
+    public static final String BUY_KEY_INSUFFICIENT_BALANCE = "❌ Недостаточно средств. Твой баланс: <b>%.2f ⭐</b>, а нужно <b>%d ⭐</b>.\n\nПополни баланс через меню 💳 Пополнить.";
+    public static final String BUY_KEY_SUCCESS = """
+            ✅ <b>Ключ успешно куплен!</b>
+
+            📧 Email: <code>%s</code>
+            🔑 UUID: <code>%s</code>
+            📡 Inbound: %s
+            📅 Срок: %s
+            📊 Трафик: %s
+
+            Баланс списан: <b>%d ⭐</b>
+            Остаток: <b>%.2f ⭐</b>
+
+            Ключ появится в разделе 🔑 Мои ключи.""";
+    public static final String BUY_KEY_ERROR = "❌ Ошибка при создании ключа на сервере. Попробуй позже или обратись к администратору.";
+    public static final String BUY_KEY_PLAN_1 = "📅 30 дней / 100 GB — %d ⭐";
+    public static final String BUY_KEY_PLAN_2 = "📅 90 дней / 500 GB — %d ⭐";
     public static final String SERVICE_UNAVAILABLE = "⚠️ Сервис VPN временно недоступен. Попробуй позже.";
+
+    // Shop
+    public static final String SHOP_TITLE = "🏪 <b>Магазин</b>\n\nВыбери тариф:";
+    public static final String SHOP_NO_PRODUCTS = "В магазине пока нет товаров.";
+    public static final String SHOP_BUY_CONFIRM = "Ты выбрал: <b>%s</b>\nСтоимость: <b>%.0f ⭐</b>\n\nПодтверждаешь покупку?";
+    public static final String SHOP_BUY_SUCCESS = "✅ Покупка совершена!\n\nТвой ключ создан и доступен в разделе <b>Кабинет → Мои ключи</b>.";
+    public static final String SHOP_BUY_NO_BALANCE = "❌ Недостаточно средств.\nТвой баланс: <b>%.0f ⭐</b>\nНеобходимо: <b>%.0f ⭐</b>\n\nПополни баланс в кабинете.";
+    public static final String SHOP_BUY_ERROR = "❌ Ошибка при создании ключа. Обратись в поддержку.";
+
+    // Cabinet
+    public static final String CABINET_TITLE = "🪪 <b>Личный кабинет</b>\n\nКоличество пополнений: <b>%d</b>\nКоличество заказов: <b>%d</b>\n\nБаланс: <b>%.0f ⭐</b>";
+    public static final String CABINET_NO_ORDERS = "История покупок пуста.";
+    public static final String CABINET_ORDERS_TITLE = "🔍 <b>История покупок</b>\n\n";
+
+    // Links
+    public static final String FAQ_TEXT = "Жми по ссылке ниже, чтобы ознакомиться с часто задаваемыми вопросами 👇";
+    public static final String WARRANTY_TEXT = "Жмите по ссылке ниже, чтобы ознакомиться с гарантиями 👇";
+    public static final String REVIEWS_TEXT = "Оставить отзыв можно в нашем Telegram-канале. Ссылка появится здесь позже.";
+    public static final String SUPPORT_TEXT = "По всем вопросам обращайся в поддержку: @DreamCoreSupport";
 }

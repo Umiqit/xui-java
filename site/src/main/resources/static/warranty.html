@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гарантии — DreamCore</title>
+<style>
+:root {
+  --md-sys-color-primary: #ff9d00;
+  --md-sys-color-on-primary: #0a0a0a;
+  --md-sys-color-surface: #141416;
+  --md-sys-color-surface-dim: #0f0f11;
+  --md-sys-color-surface-bright: #1c1c1f;
+  --md-sys-color-surface-container: #18181a;
+  --md-sys-color-surface-container-high: #1e1e21;
+  --md-sys-color-on-surface: #f0f0f5;
+  --md-sys-color-on-surface-variant: #8a8a95;
+  --md-sys-color-outline: rgba(255,157,0,0.15);
+  --md-sys-color-outline-variant: rgba(255,157,0,0.08);
+  --rail-width: 80px;
+  --gap: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--md-sys-color-surface-dim);
+  color: var(--md-sys-color-on-surface);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+.main { margin-left: var(--rail-width); min-height: 100vh; display: flex; flex-direction: column; }
+.container { max-width: 800px; margin: 0 auto; padding: 2rem; width: 100%; }
+.page-title { font-size: 2.5rem; font-weight: 400; margin-bottom: 2rem; }
+.warranty-item { background: var(--md-sys-color-surface-container); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--md-sys-color-outline-variant); display: flex; gap: 1rem; align-items: flex-start; }
+.warranty-item .icon { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,157,0,0.12); display: grid; place-items: center; flex-shrink: 0; }
+.warranty-item .icon svg { width: 22px; height: 22px; fill: var(--md-sys-color-primary); }
+.warranty-item h3 { font-size: 1.1rem; font-weight: 500; margin-bottom: 0.25rem; }
+.warranty-item p { color: var(--md-sys-color-on-surface-variant); font-size: 0.95rem; }
+.footer { margin-top: auto; padding: 1.5rem 0 2rem; border-top: 1px solid var(--md-sys-color-outline-variant); text-align: center; color: var(--md-sys-color-on-surface-variant); font-size: 0.85rem; }
+@media (max-width: 900px) { .main { margin-left: 64px; } }
+@media (max-width: 600px) { .main { margin-left: 0; } .container { padding: 1rem; } .page-title { font-size: 1.75rem; } }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<div id="rail-placeholder"></div>
+<script>
+(function(){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET','/rail.html',true);
+  xhr.onreadystatechange=function(){
+    if(xhr.readyState===4 && xhr.status===200){
+      var ph = document.getElementById('rail-placeholder');
+      if(ph) ph.outerHTML = xhr.responseText;
+    }
+  };
+  xhr.send();
+})();
+</script>
+
+<div class="main">
+  <div class="container">
+    <h1 class="page-title">Наши гарантии</h1>
+
+    <div class="warranty-item">
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+      </div>
+      <div>
+        <h3>Безопасность данных</h3>
+        <p>Мы не храним логи подключений и не передаём данные третьим лицам. Ваш трафик шифруется современными протоколами.</p>
+      </div>
+    </div>
+
+    <div class="warranty-item">
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <div>
+        <h3>Стабильность соединения</h3>
+        <p>Мы гарантируем uptime серверов на уровне 99.9%. В случае сбоев ключи автоматически переключаются на резервные каналы.</p>
+      </div>
+    </div>
+
+    <div class="warranty-item">
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+      </div>
+      <div>
+        <h3>Возврат средств</h3>
+        <p>Возврат возможен в течение 24 часов с момента покупки, если ключ не был использован. Средства вернутся на баланс в боте.</p>
+      </div>
+    </div>
+
+    <div class="warranty-item">
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"/></svg>
+      </div>
+      <div>
+        <h3>Техническая поддержка</h3>
+        <p>Наша поддержка работает ежедневно и отвечает на все вопросы. Среднее время ответа — до 2 часов в рабочее время.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2026 DreamCore. Воплощаем цифровые мечты.
+  </footer>
+</div>
+
+</body>
+</html>

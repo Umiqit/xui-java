@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -91,6 +92,30 @@ public class Database {
                         data        TEXT DEFAULT '{}',
                         updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )""");
+
+                st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS products (
+                        id          BIGSERIAL PRIMARY KEY,
+                        name        TEXT NOT NULL,
+                        description TEXT,
+                        price       DOUBLE PRECISION NOT NULL,
+                        duration_days INTEGER NOT NULL,
+                        traffic_gb  INTEGER NOT NULL,
+                        inbound_id  INTEGER NOT NULL,
+                        sort_order  INTEGER DEFAULT 0,
+                        active      BOOLEAN DEFAULT TRUE
+                    )""");
+
+                st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS orders (
+                        id          BIGSERIAL PRIMARY KEY,
+                        user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        product_id  BIGINT NOT NULL REFERENCES products(id),
+                        key_id      BIGINT REFERENCES keys(id) ON DELETE SET NULL,
+                        amount      DOUBLE PRECISION NOT NULL,
+                        status      TEXT DEFAULT 'completed',
+                        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )""");
             } else {
                 st.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS users (
@@ -135,11 +160,46 @@ public class Database {
                         data        TEXT DEFAULT '{}',
                         updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
                     )""");
+
+                st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS products (
+                        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name        TEXT NOT NULL,
+                        description TEXT,
+                        price       REAL NOT NULL,
+                        duration_days INTEGER NOT NULL,
+                        traffic_gb  INTEGER NOT NULL,
+                        inbound_id  INTEGER NOT NULL,
+                        sort_order  INTEGER DEFAULT 0,
+                        active      INTEGER DEFAULT 1
+                    )""");
+
+                st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS orders (
+                        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        product_id  INTEGER NOT NULL REFERENCES products(id),
+                        key_id      INTEGER REFERENCES keys(id) ON DELETE SET NULL,
+                        amount      REAL NOT NULL,
+                        status      TEXT DEFAULT 'completed',
+                        created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )""");
             }
 
             log.info("DB initialized ({})", isPostgres ? "postgres" : "sqlite");
         } catch (SQLException e) {
             throw new RuntimeException("DB init failed", e);
+        }
+
+        // Seed default products if none exist
+        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
+            ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM products");
+            if (rs.next() && rs.getInt(1) == 0) {
+                seedProducts(st);
+                log.info("Default products seeded");
+            }
+        } catch (SQLException e) {
+            log.warn("Failed to seed products: {}", e.getMessage());
         }
     }
 
@@ -198,10 +258,53 @@ public class Database {
                     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )""");
 
+            st.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS products (
+                    id          BIGSERIAL PRIMARY KEY,
+                    name        TEXT NOT NULL,
+                    description TEXT,
+                    price       DOUBLE PRECISION NOT NULL,
+                    duration_days INTEGER NOT NULL,
+                    traffic_gb  INTEGER NOT NULL,
+                    inbound_id  INTEGER NOT NULL,
+                    sort_order  INTEGER DEFAULT 0,
+                    active      BOOLEAN DEFAULT TRUE
+                )""");
+
+            st.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS orders (
+                    id          BIGSERIAL PRIMARY KEY,
+                    user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    product_id  BIGINT NOT NULL REFERENCES products(id),
+                    key_id      BIGINT REFERENCES keys(id) ON DELETE SET NULL,
+                    amount      DOUBLE PRECISION NOT NULL,
+                    status      TEXT DEFAULT 'completed',
+                    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )""");
+
             log.info("DB initialized (postgres)");
         } catch (SQLException e) {
             throw new RuntimeException("DB init failed", e);
         }
+
+        // Seed default products if none exist
+        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
+            ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM products");
+            if (rs.next() && rs.getInt(1) == 0) {
+                seedProducts(st);
+                log.info("Default products seeded");
+            }
+        } catch (SQLException e) {
+            log.warn("Failed to seed products: {}", e.getMessage());
+        }
+    }
+
+    private static void seedProducts(Statement st) throws SQLException {
+        st.executeUpdate("INSERT INTO products (name, description, price, duration_days, traffic_gb, inbound_id, sort_order, active) VALUES " +
+            "('1 месяц', 'Доступ на 1 месяц, 100 GB трафика', 150, 30, 100, 1, 1, TRUE)," +
+            "('3 месяца', 'Доступ на 3 месяца, 300 GB трафика', 400, 90, 300, 1, 2, TRUE)," +
+            "('6 месяцев', 'Доступ на 6 месяцев, безлимитный трафик', 700, 180, 0, 1, 3, TRUE)," +
+            "('12 месяцев', 'Доступ на 12 месяцев, безлимитный трафик', 1200, 365, 0, 1, 4, TRUE)");
     }
 
     public static Connection get() throws SQLException {
