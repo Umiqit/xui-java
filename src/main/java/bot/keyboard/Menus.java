@@ -1,6 +1,7 @@
 package bot.keyboard;
 
 import bot.db.model.Key;
+import bot.db.model.Product;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -9,32 +10,51 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Menus {
 
     public static ReplyKeyboardMarkup mainMenu() {
         KeyboardRow r1 = new KeyboardRow();
-        r1.add(new KeyboardButton("👤 Профиль"));
-        r1.add(new KeyboardButton("🔑 Мои ключи"));
+        r1.add(new KeyboardButton("Магазин 🏪"));
+        r1.add(new KeyboardButton("Кабинет 🪪"));
         KeyboardRow r2 = new KeyboardRow();
-        r2.add(new KeyboardButton("💳 Пополнить"));
-        r2.add(new KeyboardButton("📊 Статистика"));
-        ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2));
+        r2.add(new KeyboardButton("FAQ ⁉️"));
+        r2.add(new KeyboardButton("Гарантии ☑️"));
+        KeyboardRow r3 = new KeyboardRow();
+        r3.add(new KeyboardButton("Отзывы 🗣️"));
+        r3.add(new KeyboardButton("Поддержка 🙋"));
+        ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2, r3));
         kb.setResizeKeyboard(true);
         return kb;
     }
 
     public static ReplyKeyboardMarkup adminMenu() {
         KeyboardRow r1 = new KeyboardRow();
-        r1.add(new KeyboardButton("👤 Профиль"));
-        r1.add(new KeyboardButton("🔑 Мои ключи"));
+        r1.add(new KeyboardButton("Магазин 🏪"));
+        r1.add(new KeyboardButton("Кабинет 🪪"));
         KeyboardRow r2 = new KeyboardRow();
-        r2.add(new KeyboardButton("💳 Пополнить"));
-        r2.add(new KeyboardButton("📊 Статистика"));
+        r2.add(new KeyboardButton("FAQ ⁉️"));
+        r2.add(new KeyboardButton("Гарантии ☑️"));
         KeyboardRow r3 = new KeyboardRow();
-        r3.add(new KeyboardButton("⚙️ Админка"));
-        ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2, r3));
+        r3.add(new KeyboardButton("Отзывы 🗣️"));
+        r3.add(new KeyboardButton("Поддержка 🙋"));
+        KeyboardRow r4 = new KeyboardRow();
+        r4.add(new KeyboardButton("⚙️ Админка"));
+        ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2, r3, r4));
+        kb.setResizeKeyboard(true);
+        return kb;
+    }
+
+    public static ReplyKeyboardMarkup cabinetMenu() {
+        KeyboardRow r1 = new KeyboardRow();
+        r1.add(new KeyboardButton("Пополнить баланс 💰"));
+        KeyboardRow r2 = new KeyboardRow();
+        r2.add(new KeyboardButton("История покупок 🔍"));
+        KeyboardRow r3 = new KeyboardRow();
+        r3.add(new KeyboardButton("🔑 Мои ключи"));
+        KeyboardRow r4 = new KeyboardRow();
+        r4.add(new KeyboardButton("Назад"));
+        ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2, r3, r4));
         kb.setResizeKeyboard(true);
         return kb;
     }
@@ -83,6 +103,43 @@ public class Menus {
         }
         if (!row.isEmpty()) rows.add(row);
         return new InlineKeyboardMarkup(rows);
+    }
+
+    public static InlineKeyboardMarkup shopKeyboard(List<Product> products) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        for (Product p : products) {
+            String traffic = p.trafficGb == 0 ? "∞" : p.trafficGb + " GB";
+            String label = String.format("%s — %.0f ⭐ (%d дн, %s)", p.name, p.price, p.durationDays, traffic);
+            rows.add(List.of(InlineKeyboardButton.builder()
+                    .text(label)
+                    .callbackData("shop_buy:" + p.id)
+                    .build()));
+        }
+        return new InlineKeyboardMarkup(rows);
+    }
+
+    public static InlineKeyboardMarkup shopConfirmKeyboard(long productId) {
+        return new InlineKeyboardMarkup(List.of(
+                List.of(
+                        InlineKeyboardButton.builder()
+                                .text("✅ Купить")
+                                .callbackData("shop_confirm:" + productId)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text("❌ Отмена")
+                                .callbackData("shop_cancel")
+                                .build()
+                )
+        ));
+    }
+
+    public static InlineKeyboardMarkup backToCabinetKeyboard() {
+        return new InlineKeyboardMarkup(List.of(
+                List.of(InlineKeyboardButton.builder()
+                        .text("◀️ Назад в кабинет")
+                        .callbackData("cabinet_back")
+                        .build())
+        ));
     }
 
     public static InlineKeyboardMarkup adminInboundsKeyboard(List<com.fasterxml.jackson.databind.JsonNode> inbounds) {

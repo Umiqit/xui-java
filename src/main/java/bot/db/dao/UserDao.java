@@ -80,6 +80,32 @@ public class UserDao {
         }
     }
 
+    public static boolean deductBalance(long userId, double amount) {
+        String sql = "UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?";
+        try (Connection c = Database.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setDouble(1, amount);
+            ps.setLong(2, userId);
+            ps.setDouble(3, amount);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("UserDao.deductBalance failed", e);
+        }
+    }
+
+    public static int countOrders(long userId) {
+        String sql = "SELECT COUNT(*) FROM orders WHERE user_id=?";
+        try (Connection c = Database.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("UserDao.countOrders failed", e);
+        }
+    }
+
     private static User mapRow(ResultSet rs) throws SQLException {
         return new User(
                 rs.getLong("id"),

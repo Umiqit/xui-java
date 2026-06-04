@@ -24,6 +24,7 @@ public class Settings {
     public final String DB_NAME;
     public final String DB_USER;
     public final String DB_PASSWORD;
+    public final String SITE_URL;
 
     private Settings() {
         env = Dotenv.configure().ignoreIfMissing().load();
@@ -33,6 +34,7 @@ public class Settings {
         XUI_USERNAME = get("XUI_USERNAME", "");
         XUI_PASSWORD = get("XUI_PASSWORD", "");
         XUI_CERT_PATH = get("XUI_CERT_PATH", "");
+        SITE_URL = get("SITE_URL", "");
 
         DB_TYPE = get("DB_TYPE", "sqlite").toLowerCase();
         if (DB_TYPE.equals("postgres")) {
