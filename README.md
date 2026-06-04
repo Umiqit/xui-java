@@ -1,23 +1,30 @@
-# XUI VPN Bot
+# XUI VPN Bot + Site
 
-Telegram-бот для управления VPN-ключами через панель **XUI (3X-UI)**.
+Telegram-бот и веб-сайт для управления VPN-ключами через панель **XUI (3X-UI)**.
 
 ## Возможности
 
+### Telegram-бот
 - Просмотр профиля и баланса (Telegram Stars ⭐)
 - Управление VPN-ключами (список, статистика трафика, сброс, удаление)
 - Пополнение баланса через Telegram Stars
-- Админ-панель: добавление ключей пользователям, просмотр inbound'ов
+- Админ-панель в боте: добавление ключей пользователям, просмотр inbound'ов
+
+### Веб-сайт (Личный кабинет)
+- Авторизация через Telegram Login Widget
+- Просмотр ключей и баланса в браузере
+- Админ-панель с управлением пользователями, ключами и платежами
+- Удобный интерфейс на Thymeleaf + Material Design 3
 
 ## Стек
 
-- Java 17
-- Maven
-- SQLite / PostgreSQL + HikariCP
-- Telegram Bots API (long-polling)
-- OkHttp + Jackson
-- Docker + Docker Compose
-- Nginx Proxy Manager
+- **Java 17**, Maven
+- **Spring Boot 3** + Thymeleaf + Spring Data JPA (сайт)
+- **PostgreSQL** / SQLite + HikariCP (бот)
+- **Telegram Bots API** (long-polling)
+- **OkHttp** + Jackson
+- **Docker** + Docker Compose
+- **Nginx Proxy Manager** (SSL + проксирование)
 
 ## Быстрая установка (рекомендуется)
 
@@ -50,27 +57,52 @@ sudo /opt/xui-bot/install.sh start
 
 ## Управление через скрипт
 
+### Глобальные команды
 ```bash
-sudo /opt/xui-bot/install.sh start      # Запуск
-sudo /opt/xui-bot/install.sh stop       # Остановка
-sudo /opt/xui-bot/install.sh restart    # Перезапуск
+sudo /opt/xui-bot/install.sh start      # Запуск всего
+sudo /opt/xui-bot/install.sh stop       # Остановка всего
+sudo /opt/xui-bot/install.sh restart    # Перезапуск всего
 sudo /opt/xui-bot/install.sh status     # Статус контейнеров
 sudo /opt/xui-bot/install.sh logs       # Логи бота
-sudo /opt/xui-bot/install.sh logs npm   # Логи Nginx Proxy Manager
 sudo /opt/xui-bot/install.sh update     # Обновление из Git + пересборка
 sudo /opt/xui-bot/install.sh uninstall  # Полное удаление со всеми данными
 ```
 
-## Nginx Proxy Manager
+### Только сайт
+```bash
+sudo /opt/xui-bot/install.sh site-start     # Запуск сайта
+sudo /opt/xui-bot/install.sh site-stop      # Остановка сайта
+sudo /opt/xui-bot/install.sh site-restart   # Перезапуск сайта
+sudo /opt/xui-bot/install.sh site-logs      # Логи сайта
+sudo /opt/xui-bot/install.sh site-update    # Пересборка сайта
+```
 
-После запуска откройте в браузере:
+### Только бот
+```bash
+sudo /opt/xui-bot/install.sh bot-start      # Запуск бота
+sudo /opt/xui-bot/install.sh bot-stop       # Остановка бота
+sudo /opt/xui-bot/install.sh bot-restart    # Перезапуск бота
+sudo /opt/xui-bot/install.sh bot-logs       # Логи бота
+sudo /opt/xui-bot/install.sh bot-update     # Пересборка бота
+```
+
+### База данных
+```bash
+sudo /opt/xui-bot/install.sh db-logs        # Логи PostgreSQL
+```
+
+## Настройка домена и SSL (Nginx Proxy Manager)
+
+После запуска откройте NPM:
 ```
 http://YOUR_SERVER_IP:81
 ```
 - **Логин:** `admin@example.com`
 - **Пароль:** `changeme`
 
-Через NPM можно выпустить SSL-сертификаты и направить домен на XUI-панель или другие сервисы.
+1. Создайте Proxy Host: укажите ваш домен (например, `dreamchatai.website`) и бэкенд `http://xui-bot-site:8080`
+2. Включите SSL через Let's Encrypt
+3. **Важно:** домен должен быть добавлен в настройках бота через @BotFather (Bot Settings → Domain) для работы Telegram Login Widget
 
 ## Docker Compose (вручную)
 
@@ -80,28 +112,20 @@ http://YOUR_SERVER_IP:81
 cd /opt/xui-bot
 docker compose up -d --build
 docker compose logs -f bot
+docker compose logs -f site
 ```
 
 ## Структура сервисов
 
 | Сервис | Описание | Порты |
 |--------|----------|-------|
-| `bot` | Сам Telegram-бот | — |
-| `db` | PostgreSQL (данные бота) | — (внутри сети) |
+| `bot` | Telegram-бот | — |
+| `site` | Веб-приложение (личный кабинет) | 8080 (внутри сети) |
+| `db` | PostgreSQL (данные бота и сайта) | — (внутри сети) |
 | `npm` | Nginx Proxy Manager | 80, 443, 81 |
+| `portainer` | Управление контейнерами | 9000 |
 
 Персистентные данные хранятся в `/opt/xui-bot/data/`.
-
-## Локальная разработка (без Docker)
-
-```bash
-# SQLite по умолчанию
-cp .env.example .env
-mvn clean package
-java -jar target/xui-bot-1.0-SNAPSHOT.jar
-```
-
-Для работы с SQLite оставьте `DB_TYPE=sqlite` (или не указывайте переменную).
 
 ## Тесты
 
@@ -116,6 +140,7 @@ mvn test
 | `BOT_TOKEN` | Токен Telegram бота | — |
 | `BOT_USERNAME` | Юзернейм бота | — |
 | `ADMIN_IDS` | ID админов через запятую | — |
+| `ADMIN_PANEL_PATH` | Путь к админке сайта | `/sys/dc-panel` |
 | `XUI_URL` | URL панели XUI | — |
 | `XUI_USERNAME` | Логин от панели | — |
 | `XUI_PASSWORD` | Пароль от панели | — |
