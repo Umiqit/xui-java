@@ -777,19 +777,7 @@ body {
 
 <!-- Rail Navigation -->
 <div id="rail-placeholder"></div>
-<script>
-(function(){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET','/rail.html',true);
-  xhr.onreadystatechange=function(){
-    if(xhr.readyState===4 && xhr.status===200){
-      var ph = document.getElementById('rail-placeholder');
-      if(ph) ph.outerHTML = xhr.responseText;
-    }
-  };
-  xhr.send();
-})();
-</script>
+<script src="/rail.js"></script>
 
 <!-- Main Content -->
 <div class="main">

@@ -223,20 +223,3 @@
   50% { background-position: 200% 0; }
 }
 </style>
-<script>
-(function(){
-  var page = location.pathname.split('/').pop() || 'index.html';
-  if (page === '') page = 'index.html';
-  document.querySelectorAll('.rail-item').forEach(function(el){
-    var href = el.getAttribute('href');
-    var dataPage = el.getAttribute('data-page');
-    if (href && (href === page || href.endsWith('/' + page) || page === href.split('?')[0])) {
-      el.classList.add('active');
-    }
-    // Also check for data-page attribute matching
-    if (dataPage && page.startsWith(dataPage)) {
-      el.classList.add('active');
-    }
-  });
-})();
-</script>
