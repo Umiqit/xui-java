@@ -23,6 +23,7 @@ public class Menus {
         KeyboardRow r3 = new KeyboardRow();
         r3.add(new KeyboardButton("Отзывы 🗣️"));
         r3.add(new KeyboardButton("Поддержка 🙋"));
+        r3.add(new KeyboardButton("О нас ℹ️"));
         ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2, r3));
         kb.setResizeKeyboard(true);
         return kb;
@@ -38,6 +39,7 @@ public class Menus {
         KeyboardRow r3 = new KeyboardRow();
         r3.add(new KeyboardButton("Отзывы 🗣️"));
         r3.add(new KeyboardButton("Поддержка 🙋"));
+        r3.add(new KeyboardButton("О нас ℹ️"));
         KeyboardRow r4 = new KeyboardRow();
         r4.add(new KeyboardButton("⚙️ Админка"));
         ReplyKeyboardMarkup kb = new ReplyKeyboardMarkup(List.of(r1, r2, r3, r4));
@@ -197,6 +199,19 @@ public class Menus {
                 List.of(InlineKeyboardButton.builder()
                         .text(String.format(bot.util.Messages.BUY_KEY_PLAN_2, bot.handler.BuyKeyHandler.PLAN_2_PRICE))
                         .callbackData("buy_plan:" + serverId + ":" + inboundId + ":2").build())
+        ));
+    }
+
+    public static InlineKeyboardMarkup aboutKeyboard() {
+        return new InlineKeyboardMarkup(List.of(
+                List.of(InlineKeyboardButton.builder()
+                        .text("📋 Публичная оферта")
+                        .url("https://telegra.ph/Publichnaya-oferta-05-20-16")
+                        .build()),
+                List.of(InlineKeyboardButton.builder()
+                        .text("🔒 Политика конфиденциальности")
+                        .url("https://telegra.ph/Politika-konfidencialnosti-i-obrabotki-fajlov-Cookie-05-20")
+                        .build())
         ));
     }
 }

@@ -5,7 +5,13 @@ public final class Messages {
     private Messages() {
     }
 
-    public static final String START_HELLO = "Привет, <b>%s</b>!\n\nДобро пожаловать в DreamCore. Выбери нужный раздел в меню.";
+    public static final String START_HELLO = """
+            Привет, <b>%s</b>!
+
+            Добро пожаловать в DreamCore. Выбери нужный раздел в меню.
+
+            📋 <a href="https://telegra.ph/Publichnaya-oferta-05-20-16">Публичная оферта</a>
+            🔒 <a href="https://telegra.ph/Politika-konfidencialnosti-i-obrabotki-fajlov-Cookie-05-20">Политика конфиденциальности</a>""";
     public static final String UNKNOWN_COMMAND = "Не понял команду. Используй кнопки меню.";
     public static final String NO_KEYS = "У тебя пока нет ключей.";
     public static final String KEYS_TITLE = "🔑 <b>Твои ключи</b> (%d):";
@@ -92,4 +98,7 @@ public final class Messages {
     public static final String WARRANTY_TEXT = "Жмите по ссылке ниже, чтобы ознакомиться с гарантиями 👇";
     public static final String REVIEWS_TEXT = "Оставить отзыв можно в нашем Telegram-канале. Ссылка появится здесь позже.";
     public static final String SUPPORT_TEXT = "По всем вопросам обращайся в поддержку: @DreamCoreSupport";
+
+    // About
+    public static final String ABOUT_TEXT = "ℹ️ <b>О нас</b>\n\nОзнакомься с нашими документами:";
 }

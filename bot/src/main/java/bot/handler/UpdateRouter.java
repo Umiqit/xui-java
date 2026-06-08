@@ -58,6 +58,8 @@ public class UpdateRouter {
                         CabinetHandler.handleReviews(bot, msg);
                     case "Поддержка 🙋" ->
                         CabinetHandler.handleSupport(bot, msg);
+                    case "О нас ℹ️" ->
+                        AboutHandler.handleAbout(bot, msg);
                     case "Пополнить баланс 💰" ->
                         PaymentHandler.handleTopup(bot, msg);
                     case "История покупок 🔍" ->
