@@ -23,7 +23,7 @@ public class ServerDao {
     }
 
     public static List<Server> findActive() {
-        String sql = "SELECT * FROM servers WHERE active = 1 ORDER BY id";
+        String sql = "SELECT * FROM servers WHERE active = TRUE ORDER BY id";
         List<Server> list = new ArrayList<>();
         try (Connection c = Database.get();
              Statement st = c.createStatement();

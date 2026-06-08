@@ -13,7 +13,7 @@ import java.util.List;
 public class ProductDao {
 
     public static List<Product> findAllActive() {
-        String sql = "SELECT id, name, description, price, duration_days, traffic_gb, inbound_id, sort_order, active FROM products WHERE active=1 ORDER BY sort_order, id";
+        String sql = "SELECT id, name, description, price, duration_days, traffic_gb, inbound_id, sort_order, active FROM products WHERE active=TRUE ORDER BY sort_order, id";
         List<Product> list = new ArrayList<>();
         try (Connection c = Database.get();
              PreparedStatement ps = c.prepareStatement(sql);
