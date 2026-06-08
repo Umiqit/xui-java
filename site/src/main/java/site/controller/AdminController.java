@@ -8,12 +8,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import site.entity.Key;
 import site.entity.Payment;
+import site.entity.Server;
 import site.entity.User;
 import site.repository.KeyRepository;
 import site.repository.PaymentRepository;
+import site.repository.ServerRepository;
 import site.repository.UserRepository;
 import site.service.DatabaseRepairService;
 
@@ -36,6 +39,9 @@ public class AdminController {
 
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @Autowired
+    private ServerRepository serverRepository;
 
     @Autowired
     private DatabaseRepairService dbRepairService;
@@ -75,10 +81,12 @@ public class AdminController {
         List<User> users = userRepository.findAll();
         List<Key> keys = keyRepository.findAll();
         List<Payment> payments = paymentRepository.findAll();
+        List<Server> servers = serverRepository.findAll();
 
         model.addAttribute("users", users);
         model.addAttribute("keys", keys);
         model.addAttribute("payments", payments);
+        model.addAttribute("servers", servers);
         return "admin";
     }
 
@@ -92,6 +100,51 @@ public class AdminController {
             ra.addFlashAttribute("message", "Таблицы БД успешно обновлены!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Ошибка обновления таблиц: " + e.getMessage());
+        }
+        return "redirect:" + adminPath;
+    }
+
+    @PostMapping("${admin.panel-path}/add-server")
+    public String addServer(HttpSession session, RedirectAttributes ra,
+                            @RequestParam String name,
+                            @RequestParam String location,
+                            @RequestParam String url,
+                            @RequestParam String username,
+                            @RequestParam String password,
+                            @RequestParam(required = false) String certPath,
+                            @RequestParam(defaultValue = "true") boolean active,
+                            @RequestParam(defaultValue = "1") int weight) {
+        if (!isAdmin(session)) {
+            return "redirect:/profile";
+        }
+        try {
+            Server s = new Server();
+            s.setName(name);
+            s.setLocation(location);
+            s.setUrl(url);
+            s.setUsername(username);
+            s.setPassword(password);
+            s.setCertPath(certPath);
+            s.setActive(active);
+            s.setWeight(weight);
+            serverRepository.save(s);
+            ra.addFlashAttribute("message", "Сервер добавлен!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Ошибка добавления сервера: " + e.getMessage());
+        }
+        return "redirect:" + adminPath;
+    }
+
+    @PostMapping("${admin.panel-path}/del-server")
+    public String delServer(HttpSession session, RedirectAttributes ra, @RequestParam Long id) {
+        if (!isAdmin(session)) {
+            return "redirect:/profile";
+        }
+        try {
+            serverRepository.deleteById(id);
+            ra.addFlashAttribute("message", "Сервер удалён.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Ошибка удаления сервера: " + e.getMessage());
         }
         return "redirect:" + adminPath;
     }

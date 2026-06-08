@@ -133,11 +133,69 @@ docker compose logs -f site
 
 Персистентные данные хранятся в `/opt/xui-bot/data/`.
 
+## Структура проекта
+
+```
+xui-java/
+├── bot/          # Telegram-бот (Java + Maven)
+│   ├── Dockerfile
+│   ├── pom.xml
+│   ├── src/
+│   └── run-local.sh
+├── site/         # Spring Boot сайт
+│   ├── Dockerfile
+│   ├── pom.xml
+│   └── src/
+├── docker-compose.yml
+├── install.sh
+└── .env
+```
+
+## Локальная разработка (без Docker)
+
+```bash
+# Бот
+cd bot
+cp ../.env.example .env
+mvn clean package
+java -jar target/xui-bot-1.0-SNAPSHOT.jar
+
+# Сайт
+cd site
+mvn clean package
+java -jar target/site-1.0-SNAPSHOT.jar
+```
+
+Для работы с SQLite оставьте `DB_TYPE=sqlite` (или не указывайте переменную).
+
 ## Тесты
 
 ```bash
-mvn test
+# Бот
+cd bot && mvn test
+
+# Сайт
+cd site && mvn test
 ```
+
+## Мультисерверность
+
+Бот и сайт поддерживают управление **несколькими панелями x-ui** одновременно.
+
+- Серверы хранятся в БД (таблица `servers`)
+- При покупке ключа автоматически выбирается наименее загруженный активный сервер
+- Админ может добавлять/удалять серверы через бота или сайт
+
+**Telegram-команды админа:**
+- `/servers` — список серверов со статусом
+- `/add_server` — добавить новый x-ui сервер
+- `/del_server` — удалить сервер
+- `/xui_inbounds` — просмотр inbound'ов с выбором сервера
+- `/add_key` — добавить ключ пользователю с выбором сервера
+
+**На сайте:** админ-панель → раздел "Серверы" с формой добавления.
+
+`XUI_URL` из `.env` используется как дефолтный сервер при первом запуске (если таблица серверов пуста). После этого сервера управляются через БД.
 
 ## Магазин и тарифы
 
@@ -178,7 +236,7 @@ mvn test
 | `BOT_USERNAME` | Юзернейм бота | — |
 | `ADMIN_IDS` | ID админов через запятую | — |
 | `ADMIN_PANEL_PATH` | Путь к админке сайта | `/sys/dc-panel` |
-| `XUI_URL` | URL панели XUI | — |
+| `XUI_URL` | URL панели XUI (опц., для начального сервера) | — |
 | `XUI_USERNAME` | Логин от панели | — |
 | `XUI_PASSWORD` | Пароль от панели | — |
 | `XUI_CERT_PATH` | Путь к self-signed серту (опц.) | — |

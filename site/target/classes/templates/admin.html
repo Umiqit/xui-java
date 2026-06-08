@@ -703,8 +703,8 @@
           <div class="stat-label">Платежей</div>
         </div>
         <div class="overview-card anim anim-d4">
-          <div class="stat-num" th:text="${users.size() > 0} ? ${users.size()} : '0'">0</div>
-          <div class="stat-label">Активных</div>
+          <div class="stat-num" th:text="${servers.size()}">0</div>
+          <div class="stat-label">Серверов</div>
         </div>
       </div>
 
@@ -785,6 +785,61 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Servers Section -->
+      <div class="section-card anim anim-d2">
+        <div class="section-header">
+          <h2>
+            <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19H5v-2h2v2zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 9H5V7h2v2z"/></svg>
+            Серверы
+          </h2>
+          <span class="count-badge" th:text="${servers.size()}">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Локация</th>
+                <th>URL</th>
+                <th>Active</th>
+                <th>Дата</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="s : ${servers}">
+                <td th:text="${s.id}"></td>
+                <td th:text="${s.name}"></td>
+                <td th:text="${s.location}"></td>
+                <td th:text="${s.url}"></td>
+                <td>
+                  <span class="badge" th:classappend="${s.active} ? 'badge-success' : 'badge-danger'" th:text="${s.active} ? 'ON' : 'OFF'"></span>
+                </td>
+                <td th:text="${s.createdAt}"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:1rem;">
+          <form th:action="@{${adminPath} + '/add-server'}" method="post" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:0.75rem;">
+            <input type="text" name="name" placeholder="Название" required class="form-input" style="background:var(--md-sys-color-surface-container-low); border:1px solid var(--md-sys-color-outline-variant); border-radius:8px; padding:0.5rem; color:var(--md-sys-color-on-surface);">
+            <input type="text" name="location" placeholder="Локация" required class="form-input" style="background:var(--md-sys-color-surface-container-low); border:1px solid var(--md-sys-color-outline-variant); border-radius:8px; padding:0.5rem; color:var(--md-sys-color-on-surface);">
+            <input type="text" name="url" placeholder="URL панели" required class="form-input" style="background:var(--md-sys-color-surface-container-low); border:1px solid var(--md-sys-color-outline-variant); border-radius:8px; padding:0.5rem; color:var(--md-sys-color-on-surface);">
+            <input type="text" name="username" placeholder="Username" required class="form-input" style="background:var(--md-sys-color-surface-container-low); border:1px solid var(--md-sys-color-outline-variant); border-radius:8px; padding:0.5rem; color:var(--md-sys-color-on-surface);">
+            <input type="text" name="password" placeholder="Password" required class="form-input" style="background:var(--md-sys-color-surface-container-low); border:1px solid var(--md-sys-color-outline-variant); border-radius:8px; padding:0.5rem; color:var(--md-sys-color-on-surface);">
+            <input type="text" name="certPath" placeholder="Cert path (опц.)" class="form-input" style="background:var(--md-sys-color-surface-container-low); border:1px solid var(--md-sys-color-outline-variant); border-radius:8px; padding:0.5rem; color:var(--md-sys-color-on-surface);">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <label style="color:var(--md-sys-color-on-surface-variant); font-size:0.85rem;">Active</label>
+              <input type="checkbox" name="active" value="true" checked style="accent-color:var(--md-sys-color-primary);">
+            </div>
+            <input type="number" name="weight" placeholder="Weight" value="1" class="form-input" style="background:var(--md-sys-color-surface-container-low); border:1px solid var(--md-sys-color-outline-variant); border-radius:8px; padding:0.5rem; color:var(--md-sys-color-on-surface);">
+            <div class="btn-wrap" style="justify-self:start;">
+              <button type="submit" class="btn-inner">Добавить сервер</button>
+            </div>
+          </form>
         </div>
       </div>
 
