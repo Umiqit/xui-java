@@ -37,6 +37,7 @@ public class PaymentHandler {
                 .description(String.format(Messages.INVOICE_DESC, amount))
                 .payload(String.valueOf(paymentId))
                 .providerToken("") // empty for Telegram Stars (XTR)
+                .startParameter("") // required by API, empty for Stars
                 .currency("XTR")
                 .price(new LabeledPrice(amount + " Stars", amount))
                 .build());
