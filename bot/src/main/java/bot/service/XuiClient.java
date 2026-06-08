@@ -49,21 +49,26 @@ public class XuiClient {
                     public List<Cookie> loadForRequest(HttpUrl url) { return cookies; }
                 });
 
-        if (certPath != null && !certPath.isBlank()) {
+        if (certPath != null && !certPath.isBlank() && !certPath.equalsIgnoreCase("self-signed")) {
             try {
-                KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-                ks.load(null, null);
-                try (FileInputStream is = new FileInputStream(certPath)) {
-                    CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                    ks.setCertificateEntry("xui", cf.generateCertificate(is));
+                java.io.File certFile = new java.io.File(certPath);
+                if (!certFile.exists()) {
+                    log.warn("XUI certificate file not found: {} — using default trust store", certPath);
+                } else {
+                    KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+                    ks.load(null, null);
+                    try (FileInputStream is = new FileInputStream(certFile)) {
+                        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                        ks.setCertificateEntry("xui", cf.generateCertificate(is));
+                    }
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                    tmf.init(ks);
+                    SSLContext sc = SSLContext.getInstance("TLS");
+                    sc.init(null, tmf.getTrustManagers(), null);
+                    builder.sslSocketFactory(sc.getSocketFactory(), (X509TrustManager) tmf.getTrustManagers()[0]);
                 }
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-                tmf.init(ks);
-                SSLContext sc = SSLContext.getInstance("TLS");
-                sc.init(null, tmf.getTrustManagers(), null);
-                builder.sslSocketFactory(sc.getSocketFactory(), (X509TrustManager) tmf.getTrustManagers()[0]);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to load custom XUI certificate from " + certPath, e);
+                log.warn("Failed to load custom XUI certificate from {}: {} — using default trust store", certPath, e.getMessage());
             }
         }
         return builder.build();
