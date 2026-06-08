@@ -9,6 +9,5 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=builder /build/target/xui-bot-1.0-SNAPSHOT.jar app.jar
-COPY .env .env
 RUN mkdir -p logs
 CMD ["java", "-jar", "app.jar"]
