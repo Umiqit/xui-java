@@ -81,7 +81,9 @@ public class XuiClient {
                 .post(RequestBody.create(body, FORM))
                 .build();
         try (Response resp = http.newCall(req).execute()) {
-            JsonNode node = mapper.readTree(resp.body().string());
+            String respBody = resp.body().string();
+            log.warn("XUI login response code: {}, body: {}", resp.code(), respBody);
+            JsonNode node = mapper.readTree(respBody);
             if (!node.path("success").asBoolean(false)) {
                 throw new XuiApiException("XUI login rejected");
             }
