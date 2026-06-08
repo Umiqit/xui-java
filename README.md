@@ -93,13 +93,37 @@ docker compose logs -f bot
 
 Персистентные данные хранятся в `/opt/xui-bot/data/`.
 
+## Структура проекта
+
+```
+xui-java/
+├── bot/          # Telegram-бот (Java + Maven)
+│   ├── Dockerfile
+│   ├── pom.xml
+│   ├── src/
+│   └── run-local.sh
+├── site/         # Spring Boot сайт
+│   ├── Dockerfile
+│   ├── pom.xml
+│   └── src/
+├── docker-compose.yml
+├── install.sh
+└── .env
+```
+
 ## Локальная разработка (без Docker)
 
 ```bash
-# SQLite по умолчанию
-cp .env.example .env
+# Бот
+cd bot
+cp ../.env.example .env
 mvn clean package
 java -jar target/xui-bot-1.0-SNAPSHOT.jar
+
+# Сайт
+cd site
+mvn clean package
+java -jar target/site-1.0-SNAPSHOT.jar
 ```
 
 Для работы с SQLite оставьте `DB_TYPE=sqlite` (или не указывайте переменную).
@@ -107,7 +131,11 @@ java -jar target/xui-bot-1.0-SNAPSHOT.jar
 ## Тесты
 
 ```bash
-mvn test
+# Бот
+cd bot && mvn test
+
+# Сайт
+cd site && mvn test
 ```
 
 ## Мультисерверность

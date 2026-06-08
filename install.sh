@@ -156,7 +156,7 @@ copy_project() {
     mkdir -p "$INSTALL_DIR"
 
     # If running from git repo, copy all files. Otherwise clone.
-    if [ -d "$SCRIPT_DIR/.git" ] || [ -f "$SCRIPT_DIR/pom.xml" ]; then
+    if [ -d "$SCRIPT_DIR/.git" ] || [ -d "$SCRIPT_DIR/bot" ] || [ -d "$SCRIPT_DIR/site" ]; then
         cp -a "$SCRIPT_DIR"/. "$INSTALL_DIR"/
     else
         git clone https://github.com/user/xui-java.git "$INSTALL_DIR" 2>/dev/null || true
@@ -167,7 +167,7 @@ copy_project() {
     mkdir -p "$INSTALL_DIR/data/npm-data"
     mkdir -p "$INSTALL_DIR/data/npm-letsencrypt"
     mkdir -p "$INSTALL_DIR/data/portainer"
-    mkdir -p "$INSTALL_DIR/logs"
+    mkdir -p "$INSTALL_DIR/bot/logs"
     mkdir -p "$INSTALL_DIR/site"
 
     ok "Project copied to $INSTALL_DIR"
@@ -201,7 +201,8 @@ do_start() {
     info "Building and starting containers..."
     docker compose up -d --build
     ok "Started!"
-    info "Bot logs: $0 logs"
+    info "Bot logs: $0 bot-logs"
+    info "Site logs: $0 site-logs"
     info "NPM admin panel: http://$(hostname -I | awk '{print $1}'):81"
 }
 

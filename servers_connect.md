@@ -33,7 +33,7 @@
 ### Сборка
 ```bash
 # Бот
-mvn clean package
+cd bot && mvn clean package
 # Сайт
 cd site && mvn clean package
 ```
