@@ -88,6 +88,7 @@ public class XuiClient {
                 throw new XuiApiException("XUI login rejected");
             }
         } catch (IOException e) {
+            log.warn("XUI login failed with IOException: {}", e.getMessage(), e);
             throw new XuiApiException("XUI login failed", e);
         }
     }
