@@ -9,6 +9,7 @@ bot\service\XuiClient$1.class
 bot\db\dao\OrderDao.class
 bot\db\dao\UserDao.class
 bot\handler\BalanceHandler.class
+bot\handler\AboutHandler.class
 bot\handler\ProfileHandler.class
 bot\middleware\RegisterMiddleware.class
 bot\service\XuiClientFactory.class

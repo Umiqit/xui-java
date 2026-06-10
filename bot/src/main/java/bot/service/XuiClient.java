@@ -78,14 +78,18 @@ public class XuiClient {
         String body = "username=" + username + "&password=" + password;
         Request req = new Request.Builder()
                 .url(baseUrl + "/login")
+                .header("Accept-Encoding", "identity")
                 .post(RequestBody.create(body, FORM))
                 .build();
         try (Response resp = http.newCall(req).execute()) {
-            JsonNode node = mapper.readTree(resp.body().string());
+            String respBody = resp.body().string();
+            log.warn("XUI login response code: {}, body: {}", resp.code(), respBody);
+            JsonNode node = mapper.readTree(respBody);
             if (!node.path("success").asBoolean(false)) {
                 throw new XuiApiException("XUI login rejected");
             }
         } catch (IOException e) {
+            log.warn("XUI login failed with IOException: {}", e.getMessage(), e);
             throw new XuiApiException("XUI login failed", e);
         }
     }
@@ -104,7 +108,7 @@ public class XuiClient {
 
     public List<JsonNode> getInbounds() {
         try {
-            Request req = new Request.Builder().url(baseUrl + "/xui/inbound/list").get().build();
+            Request req = new Request.Builder().url(baseUrl + "/xui/inbound/list").header("Accept-Encoding", "identity").get().build();
             JsonNode data = doRequest(req);
             ArrayNode arr = (ArrayNode) data.path("obj");
             List<JsonNode> list = new ArrayList<>();
@@ -119,6 +123,7 @@ public class XuiClient {
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/getClientTraffics/" + email)
+                    .header("Accept-Encoding", "identity")
                     .get().build();
             JsonNode data = doRequest(req);
             return data.path("obj").isNull() ? null : data.path("obj");
@@ -156,6 +161,7 @@ public class XuiClient {
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/addClient")
+                    .header("Accept-Encoding", "identity")
                     .post(RequestBody.create(payload.toString(), JSON))
                     .build();
             JsonNode resp = doRequest(req);
@@ -170,6 +176,7 @@ public class XuiClient {
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/" + inboundId + "/delClient/" + clientId)
+                    .header("Accept-Encoding", "identity")
                     .post(RequestBody.create("", JSON))
                     .build();
             JsonNode resp = doRequest(req);
@@ -183,6 +190,7 @@ public class XuiClient {
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/" + inboundId + "/resetClientTraffic/" + email)
+                    .header("Accept-Encoding", "identity")
                     .post(RequestBody.create("", JSON))
                     .build();
             JsonNode resp = doRequest(req);
@@ -214,6 +222,7 @@ public class XuiClient {
         try {
             Request req = new Request.Builder()
                     .url(baseUrl + "/xui/inbound/updateClient/" + clientId)
+                    .header("Accept-Encoding", "identity")
                     .post(RequestBody.create(payload.toString(), JSON))
                     .build();
             JsonNode resp = doRequest(req);

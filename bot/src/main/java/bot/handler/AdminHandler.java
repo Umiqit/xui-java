@@ -19,6 +19,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -192,7 +193,7 @@ public class AdminHandler {
         if (state == State.IDLE) return false;
 
         Map<String, Object> data = session.data != null ? session.data : new HashMap<>();
-        String text = msg.getText() != null ? msg.getText().trim() : "";
+        String text = extractText(msg);
 
         switch (state) {
             case WAITING_TG_ID -> {
@@ -313,6 +314,13 @@ public class AdminHandler {
                 AdminSessionDao.save(chatId, State.WAITING_SERVER_URL.name(), data);
             }
             case WAITING_SERVER_URL -> {
+                if (!text.matches("(?i)^https?://.*")) {
+                    bot.execute(SendMessage.builder()
+                            .chatId(chatId)
+                            .text("❌ URL должен начинаться с http:// или https://. Попробуй ещё раз.")
+                            .build());
+                    return true;
+                }
                 data.put("url", text);
                 bot.execute(SendMessage.builder().chatId(chatId).text("Username для панели:").build());
                 AdminSessionDao.save(chatId, State.WAITING_SERVER_USERNAME.name(), data);
@@ -360,6 +368,35 @@ public class AdminHandler {
             }
         }
         return true;
+    }
+
+    private static String extractText(Message msg) {
+        String raw = msg.getText() != null ? msg.getText().trim() : "";
+        if (raw.matches("(?i)^https?://.*")) {
+            return raw;
+        }
+        if (msg.hasEntities() && msg.getEntities() != null) {
+            for (MessageEntity e : msg.getEntities()) {
+                if ("url".equals(e.getType())) {
+                    String extracted = extractEntityText(msg, e);
+                    if (extracted != null) return extracted;
+                } else if ("text_link".equals(e.getType()) && e.getUrl() != null) {
+                    return e.getUrl().trim();
+                }
+            }
+        }
+        return raw;
+    }
+
+    private static String extractEntityText(Message msg, MessageEntity entity) {
+        String text = msg.getText();
+        if (text == null) return null;
+        int start = entity.getOffset();
+        int end = start + entity.getLength();
+        if (start >= 0 && end <= text.length()) {
+            return text.substring(start, end);
+        }
+        return null;
     }
 
     public static void handleAddKeyServerSelect(AbsSender bot, CallbackQuery call, long serverId) throws TelegramApiException {
