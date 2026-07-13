@@ -97,7 +97,7 @@ sudo /opt/xui-bot/install.sh bot-update     # Пересборка бота
 sudo /opt/xui-bot/install.sh db-logs        # Логи PostgreSQL
 ```
 
-## Настройка домена и SSL (Nginx Proxy Manager)
+##3 Настройка домена и SSL (Nginx Proxy Manager)
 
 После запуска откройте NPM:
 ```
