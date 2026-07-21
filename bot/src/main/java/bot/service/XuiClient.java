@@ -75,12 +75,20 @@ public class XuiClient {
     }
 
     public void login() {
+        // 3X-UI requires a CSRF token for login. Fetch the login page first
+        // so the cookie jar captures the session cookie and we can extract
+        // the token from the HTML meta tag.
+        String csrfToken = fetchCsrfToken();
         String body = "username=" + username + "&password=" + password;
-        Request req = new Request.Builder()
+        Request.Builder reqBuilder = new Request.Builder()
                 .url(baseUrl + "/login")
                 .header("Accept-Encoding", "identity")
-                .post(RequestBody.create(body, FORM))
-                .build();
+                .header("Referer", baseUrl + "/")
+                .post(RequestBody.create(body, FORM));
+        if (csrfToken != null && !csrfToken.isBlank()) {
+            reqBuilder.header("X-CSRF-Token", csrfToken);
+        }
+        Request req = reqBuilder.build();
         try (Response resp = http.newCall(req).execute()) {
             String respBody = resp.body().string();
             log.warn("XUI login response code: {}, body: {}", resp.code(), respBody);
@@ -92,6 +100,34 @@ public class XuiClient {
             log.warn("XUI login failed with IOException: {}", e.getMessage(), e);
             throw new XuiApiException("XUI login failed", e);
         }
+    }
+
+    private String fetchCsrfToken() {
+        Request req = new Request.Builder()
+                .url(baseUrl + "/")
+                .header("Accept-Encoding", "identity")
+                .get()
+                .build();
+        try (Response resp = http.newCall(req).execute()) {
+            String html = resp.body().string();
+            return extractCsrfToken(html);
+        } catch (IOException e) {
+            log.warn("Failed to fetch XUI login page for CSRF token: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private String extractCsrfToken(String html) {
+        if (html == null) {
+            return null;
+        }
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+                "<meta[^>]+name\\s*=\\s*\"csrf-token\"[^>]+content\\s*=\\s*\"([^\"]+)\"");
+        java.util.regex.Matcher matcher = pattern.matcher(html);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
     }
 
     private JsonNode doRequest(Request req) throws IOException {
