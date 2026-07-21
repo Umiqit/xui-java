@@ -84,9 +84,13 @@ public class XuiClient {
                 .url(baseUrl + "/login")
                 .header("Accept-Encoding", "identity")
                 .header("Referer", baseUrl + "/")
+                .header("X-Requested-With", "XMLHttpRequest")
                 .post(RequestBody.create(body, FORM));
         if (csrfToken != null && !csrfToken.isBlank()) {
+            log.warn("Sending XUI login with CSRF token");
             reqBuilder.header("X-CSRF-Token", csrfToken);
+        } else {
+            log.warn("Sending XUI login without CSRF token");
         }
         Request req = reqBuilder.build();
         try (Response resp = http.newCall(req).execute()) {
@@ -109,8 +113,11 @@ public class XuiClient {
                 .get()
                 .build();
         try (Response resp = http.newCall(req).execute()) {
+            int code = resp.code();
             String html = resp.body().string();
-            return extractCsrfToken(html);
+            String token = extractCsrfToken(html);
+            log.warn("Fetched XUI login page: status={}, csrfTokenPresent={}", code, token != null && !token.isBlank());
+            return token;
         } catch (IOException e) {
             log.warn("Failed to fetch XUI login page for CSRF token: {}", e.getMessage());
             return null;
@@ -125,7 +132,9 @@ public class XuiClient {
                 "<meta[^>]+name\\s*=\\s*\"csrf-token\"[^>]+content\\s*=\\s*\"([^\"]+)\"");
         java.util.regex.Matcher matcher = pattern.matcher(html);
         if (matcher.find()) {
-            return matcher.group(1);
+            String token = matcher.group(1);
+            log.warn("Extracted CSRF token: {}", token);
+            return token;
         }
         return null;
     }
